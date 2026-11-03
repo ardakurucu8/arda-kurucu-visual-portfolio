@@ -1,0 +1,14 @@
+node_modules/
+dist/
+output/
+playwright-report/
+test-results/
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+
+# Local source-selection record. It contains machine-specific paths and is not
+# required to run, edit, build, or deploy the portfolio.
+MEDIA_SELECTION.json
