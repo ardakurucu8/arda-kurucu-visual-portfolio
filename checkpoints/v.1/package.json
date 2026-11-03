@@ -1,0 +1,23 @@
+{
+  "name": "arda-visual-portfolio-starter",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "capture": "node scripts/capture-screenshots.mjs"
+  },
+  "dependencies": {
+    "@react-three/fiber": "^9.3.0",
+    "gsap": "^3.13.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "three": "^0.179.0"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.64.1",
+    "vite": "^7.1.0"
+  }
+}

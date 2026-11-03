@@ -2,14 +2,22 @@ import React, {Suspense, lazy, useEffect, useRef, useState} from 'react';
 import gsap from 'gsap';
 import {ScrollTrigger} from 'gsap/ScrollTrigger';
 import {projects} from './data/projects.js';
+import {LOGO_DOT, LOGO_PATH, LOGO_VIEWBOX} from './brand.js';
+import InstagramDrop from './InstagramDrop.jsx';
 
 gsap.registerPlugin(ScrollTrigger);
 const Ambient = lazy(() => import('./Ambient.jsx'));
 const WorkJourney = lazy(() => import('./WorkJourney.jsx'));
+const ServiceStory = lazy(() => import('./ServiceStory.jsx'));
+const services = [
+  ['videography', 'Videography', 'Concept-led moving images for artists and personal projects.'],
+  ['photography', 'Photography', 'Portraits and visual stories shaped around mood, people and place.'],
+  ['illustration', 'Illustration Design', 'Illustrated and designed visuals, from first idea to final artwork.'],
+];
 const filters = ['All', 'Video', 'Photography', 'AI / Generative'];
 const copy = {
   descriptor: 'Visual Creative',
-  services: 'Video / Photography / Editing',
+  services: 'Videography / Photography / Design',
   email: 'ardakurucu8@gmail.com',
   instagram: 'https://www.instagram.com/kurucuvisuals/',
 };
@@ -126,18 +134,30 @@ function ProjectDialog({project, index, onClose, onNavigate}) {
   );
 }
 
+function StudioMark() {
+  return (
+    <svg className="studio-mark" viewBox={LOGO_VIEWBOX} role="img" aria-label="Kurucuvisuals">
+      <path fill="currentColor" d={LOGO_PATH} />
+      <circle {...LOGO_DOT} />
+    </svg>
+  );
+}
+
 function Header({open, setOpen}) {
   const closeMenu = () => setOpen(false);
   return (
     <header className={`site-header ${open ? 'menu-open' : ''}`} id="top">
-      <a className="wordmark" href="#top" onClick={closeMenu}>ARDA KURUCU<span>®</span></a>
+      <a className="wordmark" href="#top" onClick={closeMenu}>
+        <span>ARDA KURUCU</span>
+        <i className="wordmark-divider" aria-hidden="true" />
+        <StudioMark />
+      </a>
       <button className="menu-toggle" type="button" aria-expanded={open} aria-controls="site-navigation" onClick={() => setOpen(!open)}>
         <span>{open ? 'CLOSE' : 'MENU'}</span><i aria-hidden="true" />
       </button>
       <nav className="site-nav" id="site-navigation" aria-label="Main navigation">
         <a href="#work" onClick={closeMenu}>WORK</a>
         <a href="#approach" onClick={closeMenu}>APPROACH</a>
-        <a href="#services" onClick={closeMenu}>SERVICES</a>
         <a href="#about" onClick={closeMenu}>ABOUT</a>
         <a href="#contact" onClick={closeMenu}>CONTACT</a>
       </nav>
@@ -151,6 +171,7 @@ export default function App() {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [useWebgl, setUseWebgl] = useState(false);
+  const [mobileJourney, setMobileJourney] = useState(false);
   const appRef = useRef(null);
 
   useEffect(() => {
@@ -162,7 +183,12 @@ export default function App() {
         return Boolean(window.WebGL2RenderingContext && canvas.getContext('webgl2'));
       } catch { return false; }
     };
-    const update = () => setUseWebgl(!reduced.matches && desktop.matches && supportsWebgl());
+    const update = () => {
+      const capable = !reduced.matches && supportsWebgl();
+      setUseWebgl(capable && desktop.matches);
+      // Lighter Work journey on phones/tablets; very low-memory devices keep the photo grid.
+      setMobileJourney(capable && !desktop.matches && (navigator.deviceMemory ?? 4) > 2);
+    };
     update();
     reduced.addEventListener('change', update);
     desktop.addEventListener('change', update);
@@ -189,6 +215,8 @@ export default function App() {
   const visible = filter === 'All' ? projects : projects.filter((project) => project.type === filter);
   const navigateProject = (direction) => setSelectedIndex((current) => (current + direction + projects.length) % projects.length);
   const openProject = (project) => setSelectedIndex(projects.indexOf(project));
+  const [story, setStory] = useState(null);
+  const openStory = (slug, trigger) => setStory({slug, trigger});
 
   return (
     <div ref={appRef}>
@@ -199,10 +227,10 @@ export default function App() {
         <section className="hero" aria-labelledby="hero-title">
           {useWebgl && <Suspense fallback={null}><Ambient /></Suspense>}
           <div className="hero-index eyebrow" data-intro><span>INDEPENDENT {copy.descriptor}</span><span>{copy.services}</span></div>
-          <h1 id="hero-title" data-intro><span>VISUALS WITH</span><em>A POINT OF VIEW.</em></h1>
+          <h1 id="hero-title" data-intro><span>VISUALS WITH</span><em>A STORY AND STYLE.</em></h1>
           <div className="hero-lower">
             <div className="hero-summary" data-intro>
-              <p>Video, photography and editing.<br />Built around an idea, made to feel personal.</p>
+              <p>Videography, photography and design.<br />Built around an idea, made to feel personal.</p>
               <div className="hero-actions">
                 <a className="pill pill-dark" href="#work">EXPLORE WORK <Arrow direction="down" /></a>
                 <a className="pill" href={`mailto:${copy.email}?subject=Let's%20collaborate`}>DISCUSS A PROJECT <Arrow /></a>
@@ -227,8 +255,8 @@ export default function App() {
               {filters.map((item) => <button key={item} type="button" aria-pressed={filter === item} onClick={() => setFilter(item)}>{item}</button>)}
             </div>
           </div>
-          {useWebgl && <Suspense fallback={<div className="journey-loading eyebrow">PREPARING VISUAL JOURNEY…</div>}><WorkJourney items={visible} onOpen={openProject} /></Suspense>}
-          <div className={`project-grid ${useWebgl ? 'project-grid-fallback' : ''}`}>
+          {(useWebgl || mobileJourney) && <Suspense fallback={<div className="journey-loading eyebrow">PREPARING VISUAL JOURNEY…</div>}><WorkJourney key={useWebgl ? 'desktop' : 'mobile'} items={visible} onOpen={openProject} mobile={!useWebgl} /></Suspense>}
+          <div className={`project-grid ${useWebgl || mobileJourney ? 'project-grid-fallback' : ''}${mobileJourney ? ' project-grid-hidden' : ''}`}>
             {visible.map((project, visibleIndex) => {
               const projectIndex = projects.indexOf(project);
               return (
@@ -255,40 +283,35 @@ export default function App() {
             <h2 id="approach-title" data-reveal>CONCEPT FIRST.<br /><em>MEDIUM SECOND.</em></h2>
             <div className="approach-copy" data-reveal>
               <p>A strong visual starts before the camera turns on. The process moves from idea and mood to composition, light and rhythm—then chooses the medium that makes it feel right.</p>
-              <p className="eyebrow">IDEA → IMAGE → EDIT → FEELING</p>
             </div>
           </div>
           <div className="process-strip" data-reveal>
-            {['Listen', 'Shape', 'Make', 'Refine'].map((item, index) => <div key={item}><span>{String(index + 1).padStart(2, '0')}</span><strong>{item}</strong></div>)}
+            {['Idea', 'Image', 'Edit', 'Feeling'].map((item, index) => <div key={item}><span>{String(index + 1).padStart(2, '0')}</span><strong>{item}</strong></div>)}
           </div>
-        </section>
-
-        <section id="services" className="section services" aria-labelledby="services-title">
-          <div className="section-heading" data-reveal><p className="eyebrow">03 / WHAT I CREATE</p><h2 id="services-title">THREE WAYS<br /><em>TO MAKE IT VISUAL.</em></h2></div>
           <div className="service-list">
-            {[
-              ['01', 'Video production', 'Concept-led moving images for artists, musicians and personal projects.'],
-              ['02', 'Photography', 'Portraits and visual stories shaped around mood, people and place.'],
-              ['03', 'Video editing', 'Purposeful pacing, structure and atmosphere from first assembly to final cut.'],
-            ].map(([number, title, body]) => <article className="service-row" data-reveal key={number}><span className="eyebrow">{number}</span><h3>{title}</h3><p>{body}</p><Arrow /></article>)}
+            {services.map(([slug, title, body], index) => (
+              <button className="service-row" type="button" data-reveal key={slug} onClick={(event) => openStory(slug, event.currentTarget)} aria-haspopup="dialog">
+                <span className="eyebrow">{String(index + 1).padStart(2, '0')}</span><h3>{title}</h3><p>{body}</p><Arrow />
+              </button>
+            ))}
           </div>
-          <p className="service-note" data-reveal>For individuals, artists and musicians. Bring a starting point—or just the feeling you want the work to leave behind.</p>
+          <p className="service-note" data-reveal>For individuals and artists. Bring a starting point—or just the feeling you want the work to leave behind.</p>
         </section>
 
         <section id="about" className="section about" aria-labelledby="about-title">
-          <p className="eyebrow" data-reveal>04 / ABOUT</p>
+          <p className="eyebrow" data-reveal>03 / ABOUT</p>
           <div className="about-layout">
             <h2 id="about-title" data-reveal>ARDA KURUCU<br /><em>VISUAL CREATIVE.</em></h2>
             <div className="about-copy" data-reveal>
               <p>Arda is an Istanbul-based visual creative working across video, photography and editing. His practice is grounded in visual concept: finding the image, rhythm and point of view that makes each project feel specific.</p>
-              <p>This portfolio is designed for collaboration with people making something personal—especially independent artists, musicians and individuals.</p>
+              <p>This portfolio is designed for collaboration with people making something personal—especially independent artists and individuals.</p>
             </div>
           </div>
           <div className="about-facts eyebrow" data-reveal><span>BASED / ISTANBUL</span><span>FOCUS / VISUAL CONCEPT</span><span>AVAILABLE / PROJECT-BASED</span></div>
         </section>
 
         <section id="contact" className="section contact" aria-labelledby="contact-title">
-          <p className="eyebrow" data-reveal>05 / GET IN TOUCH</p>
+          <p className="eyebrow" data-reveal>04 / GET IN TOUCH</p>
           <div className="contact-title-row">
             <h2 id="contact-title" data-reveal>HAVE AN <em>IDEA?</em><br />LET'S MAKE IT <em>VISUAL.</em></h2>
             <a className="contact-arrow" data-reveal href={`mailto:${copy.email}?subject=Let's%20collaborate`} aria-label="Email Arda about a project"><Arrow /></a>
@@ -303,6 +326,8 @@ export default function App() {
           </footer>
         </section>
       </main>
+      <InstagramDrop href={copy.instagram} hidden={Boolean(story) || selectedIndex !== null || menuOpen} />
+      {story && <Suspense fallback={null}><ServiceStory slug={story.slug} trigger={story.trigger} title={services.find(([slug]) => slug === story.slug)[1]} onClose={() => setStory(null)} /></Suspense>}
       {selectedIndex !== null && <ProjectDialog project={projects[selectedIndex]} index={selectedIndex} onClose={() => setSelectedIndex(null)} onNavigate={navigateProject} />}
     </div>
   );

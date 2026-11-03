@@ -1,10 +1,29 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
-import {Canvas, useFrame} from '@react-three/fiber';
+import {Canvas, useFrame, useThree} from '@react-three/fiber';
 import * as THREE from 'three';
+
+// One world-space path shared by the valley, the road lines, the camera and
+// the project images. Keep the GLSL copy below identical to pathX().
+const pathX = (z) => Math.sin(z * 0.046) * 3.15 + Math.sin(z * 0.018 + 1.2) * 1.55;
+
+const ROAD_Y = -1.55;
+const EYE_Y = -0.45;
+const FOV = 34;
+const MOBILE_FOV = 58; // portrait screens need a wider lens so images beside the road stay in frame
+const SPACING = 12; // world units between consecutive images
+const APPEAR = SPACING * 2; // images rise from the horizon at this distance, so at most two are on screen
+const START_DISTANCE = 9;
+const END_DISTANCE = 8;
+const MAX_W = 3.2;
+const MAX_H = 2.4;
+const GAP = 0.35; // clearance between the camera line and an image's inner edge
+const MOBILE_SIZE = {maxW: 2, maxH: 2.4, gap: 0.15};
+const POINTS = {high: 24000, balanced: 15000, lite: 7500, mobile: 4500, 'mobile-lite': 2500};
+const BASE_PX = 240; // CSS pixels per world unit before scaling
 
 const vertexShader = /* glsl */ `
   uniform float uTime;
-  uniform float uProgress;
+  uniform float uCamZ;
   uniform vec2 uMouse;
   uniform float uPixelRatio;
   attribute float aSeed;
@@ -13,13 +32,15 @@ const vertexShader = /* glsl */ `
   varying float vSide;
 
   float hash(float n) { return fract(sin(n) * 43758.5453123); }
+  float pathX(float z) { return sin(z * 0.046) * 3.15 + sin(z * 0.018 + 1.2) * 1.55; }
 
   void main() {
     vec3 p = position;
-    float travel = uProgress * 104.0;
-    p.z = mod(p.z + travel + 112.0, 120.0) - 112.0;
+    // Points stay fixed in world space and wrap around the moving camera.
+    p.z = uCamZ - 114.0 + mod(p.z - uCamZ + 114.0, 120.0);
+    float rel = p.z - uCamZ;
 
-    float bend = sin((p.z + travel) * 0.046) * 3.15 + sin((p.z + travel) * 0.018 + 1.2) * 1.55;
+    float bend = pathX(p.z);
     p.x += bend;
     float terrain = pow(max(abs(p.x - bend) - 1.65, 0.0) * 0.195, 1.42);
     p.y += terrain + sin(p.z * 0.17 + aSeed * 13.0) * 0.17;
@@ -28,7 +49,7 @@ const vertexShader = /* glsl */ `
     vec4 projected = projectionMatrix * mvPosition;
     vec2 ndc = projected.xy / max(projected.w, 0.001);
     float pointer = smoothstep(0.43, 0.0, distance(ndc, uMouse));
-    pointer *= smoothstep(-80.0, -5.0, p.z);
+    pointer *= smoothstep(-80.0, -5.0, rel);
     p.y += pointer * (0.45 + hash(aSeed * 71.0) * 0.8);
     p.x += pointer * sin(uTime * 1.5 + aSeed * 30.0) * 0.2;
 
@@ -38,7 +59,7 @@ const vertexShader = /* glsl */ `
     gl_PointSize = clamp(gl_PointSize, 0.85, 4.5 * uPixelRatio);
 
     vPointer = pointer;
-    vFog = smoothstep(-112.0, -18.0, p.z) * smoothstep(8.0, -2.0, p.z);
+    vFog = smoothstep(-112.0, -18.0, rel) * smoothstep(8.0, -2.0, rel);
     vSide = step(0.0, p.x - bend);
   }
 `;
@@ -81,14 +102,14 @@ function createValley(count) {
   return geometry;
 }
 
-function Valley({progressRef, pointerRef, quality, active, onSlow}) {
-  const pointCount = quality === 'high' ? 24000 : quality === 'balanced' ? 15000 : 7500;
+function Valley({camZRef, pointerRef, quality, active, onSlow, minFps = 47}) {
+  const pointCount = POINTS[quality];
   const geometry = useMemo(() => createValley(pointCount), [pointCount]);
   const materialRef = useRef(null);
   const sampleRef = useRef({frames: 0, started: 0, reported: false});
   const uniforms = useMemo(() => ({
     uTime: {value: 0},
-    uProgress: {value: 0},
+    uCamZ: {value: 0},
     uMouse: {value: new THREE.Vector2(4, 4)},
     uPixelRatio: {value: Math.min(window.devicePixelRatio || 1, quality === 'high' ? 1.5 : quality === 'balanced' ? 1.25 : 1)},
   }), [quality]);
@@ -101,7 +122,7 @@ function Valley({progressRef, pointerRef, quality, active, onSlow}) {
   useFrame(({clock}, delta) => {
     if (!materialRef.current) return;
     materialRef.current.uniforms.uTime.value = clock.elapsedTime;
-    materialRef.current.uniforms.uProgress.value += (progressRef.current - materialRef.current.uniforms.uProgress.value) * Math.min(1, delta * 5.5);
+    materialRef.current.uniforms.uCamZ.value = camZRef.current;
     materialRef.current.uniforms.uMouse.value.lerp(pointerRef.current, Math.min(1, delta * 8));
     if (!active || sampleRef.current.reported) return;
     if (!sampleRef.current.started) sampleRef.current.started = performance.now();
@@ -110,7 +131,7 @@ function Valley({progressRef, pointerRef, quality, active, onSlow}) {
     if (elapsed > 2200 && sampleRef.current.frames > 45) {
       const fps = sampleRef.current.frames / (elapsed / 1000);
       sampleRef.current.reported = true;
-      if (fps < 47) onSlow();
+      if (fps < minFps) onSlow();
     }
   });
 
@@ -129,23 +150,19 @@ function Valley({progressRef, pointerRef, quality, active, onSlow}) {
   );
 }
 
-function Road() {
+function Road({zStart, zEnd}) {
   const paths = useMemo(() => {
-    const curve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0.15, -1.55, 5),
-      new THREE.Vector3(2.7, -1.55, -17),
-      new THREE.Vector3(-3.15, -1.55, -40),
-      new THREE.Vector3(2.85, -1.55, -64),
-      new THREE.Vector3(-2.5, -1.55, -88),
-      new THREE.Vector3(1.25, -1.55, -112),
-    ]);
-    const center = curve.getPoints(180);
+    const steps = Math.ceil((zStart - zEnd) / 0.6);
+    const center = Array.from({length: steps + 1}, (_, step) => {
+      const z = zStart - (step / steps) * (zStart - zEnd);
+      return new THREE.Vector3(pathX(z), ROAD_Y, z);
+    });
     return [-1.42, 0, 1.42].map((offset) =>
       new THREE.BufferGeometry().setFromPoints(
         center.map((point) => new THREE.Vector3(point.x + offset, point.y + (offset === 0 ? -0.035 : 0), point.z))
       )
     );
-  }, []);
+  }, [zStart, zEnd]);
   useEffect(() => () => paths.forEach((geometry) => geometry.dispose()), [paths]);
   return (
     <group>
@@ -158,27 +175,153 @@ function Road() {
   );
 }
 
+const glowVertex = /* glsl */ `
+  varying vec2 vPos;
+  void main() {
+    vPos = position.xy;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const glowFragment = /* glsl */ `
+  varying vec2 vPos;
+  void main() {
+    // Wide, low ellipse centred on the horizon; below it the hills hide the source.
+    vec2 q = vPos / vec2(58.0, 17.0);
+    float d2 = dot(q, q);
+    float glow = exp(-d2 * 1.6) * 0.085 + exp(-d2 * 9.0) * 0.05;
+    glow *= mix(smoothstep(-9.0, 1.5, vPos.y), 1.0, step(0.0, vPos.y));
+    gl_FragColor = vec4(vec3(1.0, 0.62, 0.42) * glow, 1.0);
+  }
+`;
+
+const GLOW_DISTANCE = 105;
+
+// Soft light source sitting behind the far hills on the horizon.
+function HorizonGlow({camZRef}) {
+  const meshRef = useRef(null);
+  useFrame(({camera}) => {
+    if (!meshRef.current) return;
+    const z = camZRef.current - GLOW_DISTANCE;
+    meshRef.current.position.set(pathX(z), EYE_Y - 0.6, z);
+    meshRef.current.quaternion.copy(camera.quaternion);
+  });
+  return (
+    <mesh ref={meshRef} renderOrder={-1} frustumCulled={false}>
+      <planeGeometry args={[240, 90]} />
+      <shaderMaterial vertexShader={glowVertex} fragmentShader={glowFragment} transparent depthWrite={false} depthTest={false} blending={THREE.AdditiveBlending} />
+    </mesh>
+  );
+}
+
+// Moves the camera along the path and places the HTML project buttons with the
+// same camera, so images, road and valley always share one perspective.
+function Rig({targetRef, progressRef, camZRef, cardsRef, layout, camStart, camEnd, onActive, fov}) {
+  const point = useMemo(() => new THREE.Vector3(), []);
+  const activeRef = useRef(-1);
+
+  useFrame(({camera, size}, delta) => {
+    progressRef.current += (targetRef.current - progressRef.current) * (1 - Math.pow(0.905, Math.min(delta, 0.1) * 60));
+    const camZ = camStart + (camEnd - camStart) * progressRef.current;
+    camZRef.current = camZ;
+    camera.position.set(pathX(camZ), EYE_Y, camZ);
+    camera.lookAt(pathX(camZ - 10), EYE_Y, camZ - 10);
+    camera.updateMatrixWorld();
+
+    const focal = size.height / 2 / Math.tan(THREE.MathUtils.degToRad(fov / 2));
+    let nearest = -1;
+    let nearestDepth = Infinity;
+    const states = layout.map((item, index) => {
+      point.set(item.x, item.y, item.z).applyMatrix4(camera.matrixWorldInverse);
+      const depth = -point.z;
+      const scale = focal / Math.max(depth, 0.01);
+      const x = point.x * scale;
+      const y = -point.y * scale;
+      const onScreen = depth > 0.2 && depth <= APPEAR
+        && Math.abs(x) - (item.w * scale) / 2 < size.width / 2
+        && Math.abs(y) - (item.h * scale) / 2 < size.height / 2;
+      if (onScreen && depth < nearestDepth) {
+        nearest = index;
+        nearestDepth = depth;
+      }
+      return {depth, scale, x, y, onScreen};
+    });
+    const active = nearest === -1 ? Math.max(0, layout.length - 1) : nearest;
+    if (active !== activeRef.current) {
+      activeRef.current = active;
+      onActive(active);
+    }
+
+    states.forEach(({depth, scale, x, y, onScreen}, index) => {
+      const card = cardsRef.current[index];
+      if (!card) return;
+      const fadeIn = THREE.MathUtils.clamp((APPEAR - depth) / 5, 0, 1);
+      const far = THREE.MathUtils.clamp((depth - (SPACING - 1)) / (APPEAR - SPACING + 1), 0, 1);
+      const isActive = index === active;
+      card.style.visibility = onScreen ? 'visible' : 'hidden';
+      card.style.pointerEvents = isActive ? 'auto' : 'none';
+      card.tabIndex = isActive ? 0 : -1;
+      card.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+      if (!onScreen) return;
+      // Real pixel size instead of a CSS scale: scaled-up layers are rasterised
+      // at their base size and get clipped/re-tiled by the compositor while moving.
+      card.style.width = `${(layout[index].w * scale).toFixed(1)}px`;
+      card.style.height = `${(layout[index].h * scale).toFixed(1)}px`;
+      card.style.transform = `translate3d(calc(-50% + ${x.toFixed(1)}px), calc(-50% + ${y.toFixed(1)}px), 0)`;
+      card.style.opacity = String(fadeIn * (1 - far * 0.35));
+      // blur(0px) still creates a filter surface, which is what clipped the near image.
+      card.style.filter = far > 0.01 ? `blur(${(far * 7).toFixed(2)}px)` : 'none';
+      card.style.zIndex = String(Math.max(1, 1000 - Math.round(depth * 10)));
+    });
+  });
+
+  return null;
+}
+
 function QualityBadge({quality}) {
   return <span className="journey-quality" aria-label={`Visual quality: ${quality}`}>LIVE TERRAIN / {quality.toUpperCase()}</span>;
 }
 
-function initialQuality() {
+// Phones render on demand at ~30fps instead of every display frame.
+function FrameCap({active, fps}) {
+  const invalidate = useThree((state) => state.invalidate);
+  useEffect(() => {
+    if (!active) return undefined;
+    const timer = window.setInterval(() => invalidate(), 1000 / fps);
+    return () => window.clearInterval(timer);
+  }, [active, fps, invalidate]);
+  return null;
+}
+
+function initialQuality(mobile) {
+  if (mobile) return 'mobile';
   const memory = navigator.deviceMemory || 8;
   const cores = navigator.hardwareConcurrency || 8;
   if (memory <= 4 || cores <= 4) return 'balanced';
   return 'high';
 }
 
-export default function WorkJourney({items, onOpen}) {
+export default function WorkJourney({items, onOpen, mobile = false}) {
+  const size = mobile ? MOBILE_SIZE : {maxW: MAX_W, maxH: MAX_H, gap: GAP};
+  const fov = mobile ? MOBILE_FOV : FOV;
   const sectionRef = useRef(null);
   const cardsRef = useRef([]);
   const progressRef = useRef(0);
   const pointerRef = useRef(new THREE.Vector2(4, 4));
   const targetRef = useRef(0);
-  const frameRef = useRef(0);
+  const camZRef = useRef(0);
   const [activeIndex, setActiveIndex] = useState(0);
-  const activeIndexRef = useRef(0);
-  const [quality, setQuality] = useState(initialQuality);
+  const layout = useMemo(() => items.map((project, index) => {
+    const ratio = project.ratio || 1.5;
+    const w = Math.min(size.maxW, size.maxH * ratio);
+    const h = w / ratio;
+    const z = -(index + 1) * SPACING;
+    const side = index % 2 === 0 ? 1 : -1;
+    return {w, h, z, x: pathX(z) + side * (size.gap + w / 2), y: ROAD_Y + 0.1 + h / 2};
+  }), [items, mobile]);
+  const camStart = (layout[0]?.z ?? -SPACING) + START_DISTANCE;
+  const camEnd = (layout[layout.length - 1]?.z ?? -SPACING) + END_DISTANCE;
+  const [quality, setQuality] = useState(() => initialQuality(mobile));
   const [inView, setInView] = useState(false);
   useEffect(() => {
     const section = sectionRef.current;
@@ -191,78 +334,15 @@ export default function WorkJourney({items, onOpen}) {
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return undefined;
-    let running = true;
     const updateTarget = () => {
       const rect = section.getBoundingClientRect();
       const travel = Math.max(section.offsetHeight - window.innerHeight, 1);
       targetRef.current = Math.min(1, Math.max(0, -rect.top / travel));
     };
-    const render = () => {
-      if (!running) return;
-      progressRef.current += (targetRef.current - progressRef.current) * 0.095;
-      const journeyPosition = progressRef.current * Math.max(items.length - 1, 1);
-      const baseIndex = Math.min(items.length - 1, Math.floor(journeyPosition + 0.0001));
-      const phase = Math.min(1, Math.max(0, journeyPosition - baseIndex));
-      const nextActive = Math.min(items.length - 1, baseIndex + (phase >= 0.72 ? 1 : 0));
-      if (nextActive !== activeIndexRef.current) {
-        activeIndexRef.current = nextActive;
-        setActiveIndex(nextActive);
-      }
-      cardsRef.current.forEach((card, index) => {
-        if (!card) return;
-        const slot = index - baseIndex;
-        const side = index % 2 === 0 ? 1 : -1;
-        let x = 0;
-        let y = 0;
-        let z = -4200;
-        let rotate = 0;
-        let opacity = 0;
-        let blur = 14;
-        let visible = slot >= 0 && slot <= 2;
-
-        if (slot === 0) {
-          const exit = Math.max(0, (phase - 0.48) / 0.52);
-          x = side * (305 + exit * 820);
-          y = 8 - exit * 80;
-          z = exit * 600;
-          rotate = side * (1.8 + exit * 14);
-          opacity = 1 - exit;
-          blur = 0;
-        } else if (slot === 1) {
-          x = side * (245 + phase * 60);
-          y = 25 - phase * 17;
-          z = -1280 + phase * 1280;
-          rotate = side * (5.5 - phase * 3.7);
-          opacity = 0.58 + phase * 0.42;
-          blur = 7.5 * (1 - phase);
-        } else if (slot === 2) {
-          x = side * phase * 245;
-          y = 4 + phase * 21;
-          z = -3900 + phase * 2620;
-          rotate = side * (1 + phase * 4.5);
-          opacity = 0.34 + phase * 0.24;
-          blur = 13 - phase * 5.5;
-        }
-
-        const active = index === nextActive;
-        card.style.transform = `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${z}px) rotateY(${rotate}deg)`;
-        card.style.opacity = String(opacity);
-        card.style.filter = `blur(${blur}px)`;
-        card.style.visibility = visible ? 'visible' : 'hidden';
-        card.style.zIndex = slot === 0 ? '3' : slot === 1 ? '2' : '1';
-        card.style.pointerEvents = active ? 'auto' : 'none';
-        card.tabIndex = active ? 0 : -1;
-        card.setAttribute('aria-hidden', active ? 'false' : 'true');
-      });
-      frameRef.current = requestAnimationFrame(render);
-    };
     updateTarget();
     window.addEventListener('scroll', updateTarget, {passive: true});
     window.addEventListener('resize', updateTarget);
-    frameRef.current = requestAnimationFrame(render);
     return () => {
-      running = false;
-      cancelAnimationFrame(frameRef.current);
       window.removeEventListener('scroll', updateTarget);
       window.removeEventListener('resize', updateTarget);
     };
@@ -273,24 +353,27 @@ export default function WorkJourney({items, onOpen}) {
     pointerRef.current.set(((event.clientX - rect.left) / rect.width) * 2 - 1, -(((event.clientY - rect.top) / rect.height) * 2 - 1));
   };
   const onPointerLeave = () => pointerRef.current.set(4, 4);
-  const downgrade = () => setQuality((current) => current === 'high' ? 'balanced' : current === 'balanced' ? 'lite' : 'lite');
+  const downgrade = () => setQuality((current) => ({high: 'balanced', balanced: 'lite', mobile: 'mobile-lite'})[current] || current);
   const dpr = quality === 'high' ? [1, 1.5] : quality === 'balanced' ? [1, 1.25] : 1;
   const active = items[activeIndex] || items[0];
 
   return (
-    <div className="journey" ref={sectionRef} style={{'--journey-length': `${Math.max(6.4, items.length * 1.18 + 1.8) * 100}vh`}}>
-      <div className="journey-sticky" onPointerMove={onPointerMove} onPointerLeave={onPointerLeave}>
+    <div className={`journey${mobile ? ' journey-mobile' : ''}`} ref={sectionRef} style={{'--journey-length': `${Math.max(6.4, items.length * 1.18 + 1.8) * 100}vh`}}>
+      <div className="journey-sticky" onPointerMove={mobile ? undefined : onPointerMove} onPointerLeave={mobile ? undefined : onPointerLeave}>
         <div className="journey-canvas" aria-hidden="true">
           <Canvas
-            camera={{position: [0, 1.8, 7.4], fov: 52, near: 0.1, far: 140}}
+            camera={{position: [0, EYE_Y, 0], fov, near: 0.1, far: 140}}
             dpr={dpr}
-            frameloop={inView ? 'always' : 'never'}
-            gl={{alpha: false, antialias: false, powerPreference: 'high-performance'}}
+            frameloop={!inView ? 'never' : mobile ? 'demand' : 'always'}
+            gl={{alpha: false, antialias: false, powerPreference: mobile ? 'default' : 'high-performance'}}
           >
+            {mobile && <FrameCap active={inView} fps={30} />}
             <color attach="background" args={['#070a0c']} />
             <fog attach="fog" args={['#070a0c', 15, 115]} />
-            <Valley progressRef={progressRef} pointerRef={pointerRef} quality={quality} active={inView} onSlow={downgrade} />
-            <Road />
+            <Rig targetRef={targetRef} progressRef={progressRef} camZRef={camZRef} cardsRef={cardsRef} layout={layout} camStart={camStart} camEnd={camEnd} onActive={setActiveIndex} fov={fov} />
+            <HorizonGlow camZRef={camZRef} />
+            <Valley camZRef={camZRef} pointerRef={pointerRef} quality={quality} active={inView} onSlow={downgrade} minFps={mobile ? 22 : 47} />
+            <Road zStart={camStart + 10} zEnd={camEnd - 130} />
           </Canvas>
         </div>
         <div className="journey-vignette" aria-hidden="true" />
@@ -304,14 +387,14 @@ export default function WorkJourney({items, onOpen}) {
             <button
               className="journey-card"
               key={project.slug}
-              style={{aspectRatio: project.aspect, '--image-ratio': project.ratio}}
+              style={{width: `${layout[index].w * BASE_PX}px`, height: `${layout[index].h * BASE_PX}px`}}
               ref={(node) => { cardsRef.current[index] = node; }}
               type="button"
               onClick={() => onOpen(project)}
               aria-label={`View ${project.title}. ${project.role}`}
             >
               <span className="journey-card-frame">
-                <img src={project.cover} alt="" loading={index > 2 ? 'lazy' : 'eager'} draggable="false" />
+                <img src={project.cover} alt="" loading="eager" decoding="async" draggable="false" />
                 <span className="journey-card-number eyebrow">NO. {String(index + 1).padStart(2, '0')}</span>
                 <span className="journey-card-action eyebrow">OPEN PROJECT ↗</span>
               </span>

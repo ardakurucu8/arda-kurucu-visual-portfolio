@@ -14,12 +14,14 @@ MEVCUT TASARIM KARARLARI
 - Site React + Vite ile çalışıyor. Animasyonlarda GSAP, masaüstü Work deneyiminde Three.js ve React Three Fiber kullanılıyor.
 - Site dış bölümlerde sıcak kâğıt tonlu, sade ve editorial. Work bölümü karanlık, grenli ve sinematik.
 - Work sahnesi, kıvrımlı bir vadi/yol hissi veren tek GPU point-cloud alanı kullanıyor. Mouse yakınındaki parçacıklar renk ve yükseklik tepkisi veriyor.
-- Scroll sırasında aynı anda en fazla üç proje görseli görünür: öndeki net ve sağ/sol tarafta; sıradaki karşı tarafta daha uzak ve bulanık; üçüncü ileride küçük bir nokta hissinde. Görseller sırayla sağ ve soldan gelir.
+- Vadi, yol çizgileri, kamera ve proje görselleri tek bir yol formülünü (`pathX`) paylaşır. Görseller yolun hemen sağına ve soluna sırayla yerleşir; kamera düz karşıya bakarak (tilt yok) yolda ilerler ve görseller durmadan kameranın hemen yanından geçer.
+- Scroll sırasında aynı anda en fazla iki proje görseli görünür: kameraya en yakın olan net ana öğe; yolun karşısındaki sıradaki görsel perspektife göre daha küçük ve bulanık. Öndeki görsel kadrajdan çıkınca bir sonraki ufuktan belirir.
 - Görsel aralıkları bilinçli olarak geniştir. Fotoğraflar kaynak en-boy oranlarıyla, kırpılmadan kullanılır.
 - Dark Place ve Polo Binicilik projeleri tamamen çıkarıldı; yeniden ekleme.
 - AI / Generative Media bağımsız bir kategori olarak açıkça AI üretimi diye belirtilir. Altı poster `generative-01.jpg`–`generative-06.jpg` olarak sitededir.
 - Masaüstü Work sahnesi performans için tek point draw call, sınırlı DPR, görünüm dışındayken pause ve otomatik High/Balanced/Lite düşürme kullanır. Bloom, depth-of-field veya ağır post-processing ekleme.
-- Mobil, reduced-motion ve WebGL bulunmayan cihazlarda tam içerikli editorial grid fallback vardır. Bu fallback'i koru.
+- Telefon ve tabletlerde (1120px altı) aynı Work sahnesi hafif bir mobil profille çalışır: ~4.500 nokta (zorlanırsa 2.500), 1× canvas çözünürlüğü, 30 FPS sınırı, dikey ekran için daha geniş kamera açısı ve daha küçük görseller. Fotoğraflar tam çözünürlükte kalır.
+- Reduced-motion, WebGL bulunmayan ve ~2 GB ve altı belleğe sahip cihazlarda tam içerikli editorial grid fallback vardır. Bu fallback'i koru.
 - Loading curtain gerçek kritik görsel decode/preload süresini örter; yapay bir minimum bekleme değildir.
 - Erişilebilirlik önemlidir: Work görselleri HTML button, sadece aktif kart klavye odağı alır, dialog Escape ile kapanır, reduced-motion alternatifi vardır.
 - Site şu anda `noindex, nofollow` kullanır. Kesin krediler ve yayın onayı olmadan kaldırma.
@@ -36,13 +38,13 @@ DEĞİŞİKLİK YÖNTEMİ
 2. Benden gelen isteği kısa biçimde tekrar et; kapsam belirsizse özellikle içerik/kredi konusunda soru sor.
 3. Mevcut design system, breakpoint, fallback ve erişilebilirliği koruyarak değişikliği uygula.
 4. `npm run build` çalıştır. Hata veya warning varsa nedenini açıkla; gerçek hataları düzelt.
-5. Work animasyonuna dokunduysan 1440×900 masaüstü yanında 768×1024 ve 390×844 düzenlerini de kontrol et. Yatay taşma olmamalı; aynı anda 3'ten fazla journey kartı görünmemeli; yalnızca bir kart klavye aktif olmalı.
+5. Work animasyonuna dokunduysan 1440×900 masaüstü yanında 768×1024 ve 390×844 düzenlerini de kontrol et. Yatay taşma olmamalı; aynı anda 2'den fazla journey kartı görünmemeli; yalnızca bir kart klavye aktif olmalı.
 6. Değiştirdiğin dosyaları ve görsel sonucu kısa biçimde özetle. Kullanıcı istemedikçe büyük yeniden tasarım veya kütüphane değişimi yapma.
 
 REGRESYON YAPMA
 - Proje görsellerini tekrar üst üste bindirme.
 - Görselleri stretch etme veya cover ile kırpma.
-- Mobil fallback'i WebGL sahnesiyle değiştirme.
+- Mobil Work sahnesinin hafif profilini (nokta sayısı, 1× çözünürlük, 30 FPS) ağırlaştırma; grid fallback'i kaldırma.
 - Ham 6 GB medya klasörlerini Git'e ekleme.
 - Kesinleşmemiş kredi bilgilerini uydurma.
 - Dark Place veya Polo Binicilik'i geri getirme.
