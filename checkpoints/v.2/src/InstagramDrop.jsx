@@ -14,6 +14,7 @@ const DOUBLE_CLICK_WINDOW = 250;
 export default function InstagramDrop({href, hidden}) {
   const ref = useRef(null);
   const state = useRef({x: 0, y: 0, vy: 0, squash: 0, mode: 'resting', frame: 0, timer: 0, last: 0, drag: null});
+  const hinting = useRef(true);
   const reduced = useRef(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   useEffect(() => {
@@ -81,7 +82,16 @@ export default function InstagramDrop({href, hidden}) {
       paint();
     };
 
+    // Keep the hover hint inside the window: flip it below near the top, pin it to a side near the edges.
+    const onPointerEnter = () => {
+      element.dataset.tipY = s.y < 110 ? 'below' : 'above';
+      element.dataset.tipX = s.x < 90 ? 'left' : s.x > window.innerWidth - SIZE - 90 ? 'right' : 'center';
+    };
+
     const onPointerDown = (event) => {
+      // Touch screens show the hint until the first touch on the logo.
+      hinting.current = false;
+      element.classList.remove('is-hinting');
       element.setPointerCapture(event.pointerId);
       window.clearTimeout(s.timer);
       cancelAnimationFrame(s.frame);
@@ -125,6 +135,7 @@ export default function InstagramDrop({href, hidden}) {
 
     window.addEventListener('scroll', onScroll, {passive: true});
     window.addEventListener('resize', onResize);
+    element.addEventListener('pointerenter', onPointerEnter);
     element.addEventListener('pointerdown', onPointerDown);
     element.addEventListener('pointermove', onPointerMove);
     element.addEventListener('pointerup', onPointerUp);
@@ -135,6 +146,7 @@ export default function InstagramDrop({href, hidden}) {
       window.clearTimeout(s.clickTimer);
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onResize);
+      element.removeEventListener('pointerenter', onPointerEnter);
       element.removeEventListener('pointerdown', onPointerDown);
       element.removeEventListener('pointermove', onPointerMove);
       element.removeEventListener('pointerup', onPointerUp);
@@ -145,7 +157,7 @@ export default function InstagramDrop({href, hidden}) {
   return (
     <a
       ref={ref}
-      className={`ig-drop${hidden ? ' is-hidden' : ''}${reduced.current ? ' is-static' : ''}`}
+      className={`ig-drop${hinting.current ? ' is-hinting' : ''}${hidden ? ' is-hidden' : ''}${reduced.current ? ' is-static' : ''}`}
       href={href}
       target="_blank"
       rel="noreferrer"
@@ -161,6 +173,15 @@ export default function InstagramDrop({href, hidden}) {
         <circle cx="12" cy="12" r="4.2" />
         <circle cx="17.4" cy="6.6" r=".9" className="ig-dot" />
       </svg>
+      {!reduced.current && (
+        <span className="ig-tip" aria-hidden="true">
+          <span>Drag to move</span>
+          <span className="on-mouse">Click to open Instagram</span>
+          <span className="on-mouse">Double-click to drop</span>
+          <span className="on-touch">Tap to open Instagram</span>
+          <span className="on-touch">Double-tap to drop</span>
+        </span>
+      )}
     </a>
   );
 }

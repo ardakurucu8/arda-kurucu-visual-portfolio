@@ -18,12 +18,14 @@ MEVCUT TASARIM KARARLARI
 - Scroll sırasında aynı anda en fazla iki proje görseli görünür: kameraya en yakın olan net ana öğe; yolun karşısındaki sıradaki görsel perspektife göre daha küçük ve bulanık. Öndeki görsel kadrajdan çıkınca bir sonraki ufuktan belirir.
 - Görsel aralıkları bilinçli olarak geniştir. Fotoğraflar kaynak en-boy oranlarıyla, kırpılmadan kullanılır.
 - Dark Place ve Polo Binicilik projeleri tamamen çıkarıldı; yeniden ekleme.
-- AI / Generative Media bağımsız bir kategori olarak açıkça AI üretimi diye belirtilir. Altı poster `generative-01.jpg`–`generative-06.jpg` olarak sitededir.
+- Selected Works sırası (14 Kasım 2026, Arda'nın isteği): İstikbal × Society, Tanabay & Sasha, Sapanca ’26, vasiyet., Çalkala, Lubemak Lounge, Dance, City sights, Portraits, Focus, en sonda Generative Poster Studies (AI üretimi, açıkça belirtilir). Video projelerinin klipleri `public/media/portfolio/video/` içinde, proje penceresinde oynatılır. Ebebek, Kimmi Motor ve ES Kariyer Arda'nın isteğiyle çıkarıldı.
 - Masaüstü Work sahnesi performans için tek point draw call, sınırlı DPR, görünüm dışındayken pause ve otomatik High/Balanced/Lite düşürme kullanır. Bloom, depth-of-field veya ağır post-processing ekleme.
 - Telefon ve tabletlerde (1120px altı) aynı Work sahnesi hafif bir mobil profille çalışır: ~4.500 nokta (zorlanırsa 2.500), 1× canvas çözünürlüğü, 30 FPS sınırı, dikey ekran için daha geniş kamera açısı ve daha küçük görseller. Fotoğraflar tam çözünürlükte kalır.
 - Reduced-motion, WebGL bulunmayan ve ~2 GB ve altı belleğe sahip cihazlarda tam içerikli editorial grid fallback vardır. Bu fallback'i koru.
 - Loading curtain gerçek kritik görsel decode/preload süresini örter; yapay bir minimum bekleme değildir.
 - Erişilebilirlik önemlidir: Work görselleri HTML button, sadece aktif kart klavye odağı alır, dialog Escape ile kapanır, reduced-motion alternatifi vardır.
+- Dijital kartvizit ayrı bir sayfadır: `card/index.html` → `/card/` (kod `src/card/`). Ana akışta yoktur; İletişim bölümündeki DIGITAL CARD düğmesi ve footer linkiyle açılır. Arka planda Tanabay & Sasha ile vasiyet. trailer'ından kısa anlar döner; Save contact bir .vcf indirir, QR kod sayfanın kendi adresini gösterir. Telefon: +90 532 171 0401 (Arda'nın onayıyla).
+- Proje formu ayrı bir sayfadır: `project/index.html` → `/project/` (kod `src/project/`). Netlify Forms ile çalışır (form adı `project`, spam tuzağı alanı `company`); bildirim e-postası Netlify → Forms → Form notifications'tan ayarlanır. Bütün "Discuss a project" / "Start a project" düğmeleri buraya gider. `/project/?type=Photography` proje türünü önceden seçer.
 - Site şu anda `noindex, nofollow` kullanır. Kesin krediler ve yayın onayı olmadan kaldırma.
 
 İÇERİK VE MEDYA KURALLARI
@@ -32,6 +34,7 @@ MEVCUT TASARIM KARARLARI
 - Proje verileri `src/data/projects.js` içindedir. Varsayarak yeni müşteri, yıl, rol, işbirlikçi veya kredi yazma. Eksik bilgiye “confirmation pending” yaklaşımıyla davran ve Arda'ya açık soru sor.
 - Genel metinler ve iletişim `src/App.jsx` içindedir.
 - Yeni medya eklenirse web türevi optimize edilmeli; ham master dosya depoya konmamalı.
+- Proje galerileri VSCO profili gibi sütunlu, organik bir düzendedir (`src/galleryLayout.js`): fotoğraflar asla kırpılmaz, kendi oranlarında kalır; her albümdeki en net ~%40 iki sütun genişliğinde, yumuşak video kareleri tek sütun. Fotoğrafa basınca tam ekran açılır. Netlik puanları `src/data/mediaSharpness.json` içinde; yeni fotoğraf eklenince macOS'ta `swift scripts/media-sharpness.swift` çalıştırılır.
 
 DEĞİŞİKLİK YÖNTEMİ
 1. Önce `npm install` ve `npm run dev` ile mevcut siteyi aç.

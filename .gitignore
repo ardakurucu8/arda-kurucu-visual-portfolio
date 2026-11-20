@@ -12,3 +12,6 @@ test-results/
 # Local source-selection record. It contains machine-specific paths and is not
 # required to run, edit, build, or deploy the portfolio.
 MEDIA_SELECTION.json
+
+# Local inbox for new source material (Instagram export lists, previews). Not part of the site.
+incoming/

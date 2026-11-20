@@ -1,9 +1,10 @@
-import React, {Suspense, lazy, useEffect, useRef, useState} from 'react';
+import React, {Suspense, lazy, useEffect, useMemo, useRef, useState} from 'react';
 import gsap from 'gsap';
 import {ScrollTrigger} from 'gsap/ScrollTrigger';
 import {projects} from './data/projects.js';
+import {layoutGallery} from './galleryLayout.js';
+import {createPortal} from 'react-dom';
 import {LOGO_DOT, LOGO_PATH, LOGO_VIEWBOX} from './brand.js';
-import InstagramDrop from './InstagramDrop.jsx';
 
 gsap.registerPlugin(ScrollTrigger);
 const Ambient = lazy(() => import('./Ambient.jsx'));
@@ -22,8 +23,20 @@ const copy = {
   instagram: 'https://www.instagram.com/kurucuvisuals/',
 };
 
+// Drawn as SVG so phones never swap the arrow characters for colour emoji.
+const ARROW_PATHS = {
+  down: 'M12 3v18M5 14l7 7 7-7',
+  left: 'M21 12H3M10 5l-7 7 7 7',
+  right: 'M3 12h18M14 5l7 7-7 7',
+  ne: 'M6 18 18 6M8 6h10v10',
+};
+
 function Arrow({direction = 'ne'}) {
-  return <span aria-hidden="true">{direction === 'down' ? '↓' : direction === 'left' ? '←' : direction === 'right' ? '→' : '↗'}</span>;
+  return (
+    <span className="arrow" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d={ARROW_PATHS[direction] || ARROW_PATHS.ne} /></svg>
+    </span>
+  );
 }
 
 function LoadingCurtain() {
@@ -65,7 +78,92 @@ function LoadingCurtain() {
   );
 }
 
+// Full-screen viewer for album photos. It sits above the project window and takes
+// Escape / arrow keys first, so they never close or switch the project underneath.
+function Lightbox({images, index, title, onChange, onClose}) {
+  const closeRef = useRef(null);
+  const touch = useRef(null);
+  const count = images.length;
+  const go = (step) => onChange((current) => (current + step + count) % count);
+  useEffect(() => {
+    const opener = document.activeElement;
+    closeRef.current?.focus();
+    const onKey = (event) => {
+      if (!['Escape', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(event.key)) return;
+      event.stopImmediatePropagation();
+      if (event.key === 'Tab') return;
+      event.preventDefault();
+      if (event.key === 'Escape') onClose();
+      if (event.key === 'ArrowLeft') go(-1);
+      if (event.key === 'ArrowRight') go(1);
+    };
+    document.addEventListener('keydown', onKey, true);
+    return () => { document.removeEventListener('keydown', onKey, true); opener?.focus?.(); };
+  });
+  return createPortal(
+    <div className="lightbox" role="dialog" aria-modal="true" aria-label={`${title} — photo ${index + 1} of ${count}`}
+      onMouseDown={(event) => event.target === event.currentTarget && onClose()}
+      onTouchStart={(event) => { touch.current = event.touches[0].clientX; }}
+      onTouchEnd={(event) => {
+        if (touch.current === null) return;
+        const dx = event.changedTouches[0].clientX - touch.current;
+        touch.current = null;
+        if (Math.abs(dx) > 45) go(dx < 0 ? 1 : -1);
+      }}>
+      <div className="lightbox-bar">
+        <span className="eyebrow">{String(index + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}</span>
+        <button type="button" className="eyebrow" ref={closeRef} onClick={onClose}>CLOSE <span aria-hidden="true">×</span></button>
+      </div>
+      <img key={images[index]} src={images[index]} alt={`${title} — photo ${index + 1}`} />
+      {count > 1 && <>
+        <button type="button" className="lightbox-nav prev" aria-label="Previous photo" onClick={() => go(-1)}><Arrow direction="left" /></button>
+        <button type="button" className="lightbox-nav next" aria-label="Next photo" onClick={() => go(1)}><Arrow direction="right" /></button>
+      </>}
+    </div>,
+    document.body,
+  );
+}
+
+// Album layout in the spirit of a VSCO profile: equal columns, every photo at its
+// original ratio (never cropped), stacked organically. The sharpest ~40% of each
+// album span two columns; soft video stills stay one column wide.
+function JustifiedGallery({images, title, alt, large}) {
+  const ref = useRef(null);
+  const [width, setWidth] = useState(0);
+  const [open, setOpen] = useState(null);
+  useEffect(() => {
+    const element = ref.current;
+    const observer = new ResizeObserver(([entry]) => setWidth(Math.floor(entry.contentRect.width)));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  const {placed, height} = useMemo(() => (width ? layoutGallery(images, width, large) : {placed: [], height: 0}), [images, width, large]);
+  // Reading order for the full-screen viewer: top to bottom, then left to right.
+  const order = [...placed].sort((a, b) => a.y - b.y || a.x - b.x).map((item) => item.src);
+  return (
+    <div className="dialog-gallery" ref={ref} aria-label={`${title} image selection`}>
+      <div className="gallery-canvas" style={{height: `${height}px`}}>
+        {placed.map((item) => {
+          const position = order.indexOf(item.src);
+          return (
+            <button key={item.src} type="button" className="gallery-item" aria-label={`Open photo ${position + 1} of ${order.length}`}
+              style={{transform: `translate(${item.x}px, ${item.y}px)`, width: `${item.w}px`, height: `${item.h}px`}} onClick={() => setOpen(position)}>
+              <img src={item.src} loading={item.y > 900 ? 'lazy' : 'eager'} decoding="async"
+                alt={position === 0 ? alt : `${title} selected image ${position + 1}`} />
+            </button>
+          );
+        })}
+      </div>
+      {open !== null && <Lightbox images={order} index={open} title={title} onChange={setOpen} onClose={() => setOpen(null)} />}
+    </div>
+  );
+}
+
 function ProjectDialog({project, index, onClose, onNavigate}) {
+  const [clipIndex, setClipIndex] = useState(0);
+  useEffect(() => setClipIndex(0), [project]);
+  const clips = project.videos || [];
+  const clip = clips[clipIndex];
   const dialogRef = useRef(null);
   const closeRef = useRef(null);
   const previousFocus = useRef(null);
@@ -102,10 +200,23 @@ function ProjectDialog({project, index, onClose, onNavigate}) {
           <p className="eyebrow">PROJECT {String(index + 1).padStart(2, '0')} / {String(projects.length).padStart(2, '0')}</p>
           <button className="text-button" ref={closeRef} onClick={onClose}>CLOSE <span aria-hidden="true">×</span></button>
         </header>
-        <div className="dialog-visual">
-          <img src={project.cover} alt={project.alt} />
+        <div className={`dialog-visual${clip ? ' has-video' : ''}`}>
+          {clip
+            ? <video key={clip.src} src={clip.src} poster={clipIndex === 0 ? project.cover : clip.poster} controls playsInline preload="metadata" aria-label={`${project.title} — ${clip.title}`} />
+            : <img src={project.cover} alt={project.alt} />}
           <span className="media-flag">{project.label}</span>
         </div>
+        {clips.length > 1 && <div className="dialog-clips" role="group" aria-label={`${project.title} videos`}>
+          <p className="eyebrow">{clips.length} VIDEOS</p>
+          <div>
+            {clips.map((item, itemIndex) => (
+              <button key={item.src} type="button" aria-pressed={itemIndex === clipIndex} onClick={() => setClipIndex(itemIndex)}>
+                <img src={itemIndex === 0 ? project.cover : item.poster} alt="" loading="lazy" />
+                <span><small>{String(itemIndex + 1).padStart(2, '0')}</small>{item.title}</span>
+              </button>
+            ))}
+          </div>
+        </div>}
         <div className="dialog-body">
           <div className="dialog-title-block">
             <p className="eyebrow">{project.type} / {project.genre}</p>
@@ -121,12 +232,10 @@ function ProjectDialog({project, index, onClose, onNavigate}) {
             <p className="replacement-note">RELEASE NOTE — {project.context}</p>
           </div>
         </div>
-        {project.gallery?.length > 1 && <div className="dialog-gallery" aria-label={`${project.title} image selection`}>
-          {project.gallery.map((image, galleryIndex) => <img key={image} src={image} loading={galleryIndex > 1 ? 'lazy' : 'eager'} alt={galleryIndex === 0 ? project.alt : `${project.title} selected image ${galleryIndex + 1}`} />)}
-        </div>}
+        {project.gallery?.length > (clips.length ? 0 : 1) && <JustifiedGallery images={project.gallery} title={project.title} alt={project.alt} large={project.galleryLarge} />}
         <footer className="dialog-footer">
           <button className="dialog-nav" onClick={() => onNavigate(-1)}><Arrow direction="left" /> PREVIOUS</button>
-          <a className="pill pill-dark" href={`mailto:${copy.email}?subject=Project%20inquiry`}>DISCUSS A PROJECT <Arrow /></a>
+          <a className="pill pill-dark" href="/project/">DISCUSS A PROJECT <Arrow /></a>
           <button className="dialog-nav" onClick={() => onNavigate(1)}>NEXT <Arrow direction="right" /></button>
         </footer>
       </article>
@@ -155,12 +264,29 @@ function Header({open, setOpen}) {
       <button className="menu-toggle" type="button" aria-expanded={open} aria-controls="site-navigation" onClick={() => setOpen(!open)}>
         <span>{open ? 'CLOSE' : 'MENU'}</span><i aria-hidden="true" />
       </button>
-      <nav className="site-nav" id="site-navigation" aria-label="Main navigation">
-        <a href="#work" onClick={closeMenu}>WORK</a>
-        <a href="#approach" onClick={closeMenu}>APPROACH</a>
-        <a href="#about" onClick={closeMenu}>ABOUT</a>
-        <a href="#contact" onClick={closeMenu}>CONTACT</a>
-      </nav>
+      <div className="header-center">
+        <nav className="site-nav" id="site-navigation" aria-label="Main navigation">
+          <a href="#work" onClick={closeMenu}>WORK</a>
+          <a href="#approach" onClick={closeMenu}>APPROACH</a>
+          <a href="#about" onClick={closeMenu}>ABOUT</a>
+          <a href="#contact" onClick={closeMenu}>CONTACT</a>
+        </nav>
+        <a className="header-ig" href={copy.instagram} target="_blank" rel="noreferrer" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="5.2" />
+            <circle cx="12" cy="12" r="4.2" />
+            <circle cx="17.4" cy="6.6" r=".9" className="ig-dot" />
+          </svg>
+        </a>
+        <a className="header-card" href="/card/" aria-label="Digital card">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="2.5" y="5.5" width="19" height="13" rx="2.5" />
+            <circle cx="8" cy="11" r="2" />
+            <path d="M5.4 15.6c.6-1.4 1.5-2 2.6-2s2 .6 2.6 2M13.5 10h5M13.5 13.5h3.5" />
+          </svg>
+          <span>CARD</span>
+        </a>
+      </div>
       <span className="header-meta">{copy.descriptor} / Istanbul</span>
     </header>
   );
@@ -226,14 +352,14 @@ export default function App() {
       <main id="main">
         <section className="hero" aria-labelledby="hero-title">
           {useWebgl && <Suspense fallback={null}><Ambient /></Suspense>}
-          <div className="hero-index eyebrow" data-intro><span>INDEPENDENT {copy.descriptor}</span><span>{copy.services}</span></div>
+          <div className="hero-index eyebrow" data-intro><span>INDEPENDENT {copy.descriptor}</span></div>
           <h1 id="hero-title" data-intro><span>VISUALS WITH</span><em>A STORY AND STYLE.</em></h1>
           <div className="hero-lower">
             <div className="hero-summary" data-intro>
               <p>Videography, photography and design.<br />Built around an idea, made to feel personal.</p>
               <div className="hero-actions">
                 <a className="pill pill-dark" href="#work">EXPLORE WORK <Arrow direction="down" /></a>
-                <a className="pill" href={`mailto:${copy.email}?subject=Let's%20collaborate`}>DISCUSS A PROJECT <Arrow /></a>
+                <a className="pill" href="/project/">DISCUSS A PROJECT <Arrow /></a>
               </div>
             </div>
             <figure className="hero-frame" data-intro>
@@ -314,19 +440,28 @@ export default function App() {
           <p className="eyebrow" data-reveal>04 / GET IN TOUCH</p>
           <div className="contact-title-row">
             <h2 id="contact-title" data-reveal>HAVE AN <em>IDEA?</em><br />LET'S MAKE IT <em>VISUAL.</em></h2>
-            <a className="contact-arrow" data-reveal href={`mailto:${copy.email}?subject=Let's%20collaborate`} aria-label="Email Arda about a project"><Arrow /></a>
+            <a className="contact-arrow" data-reveal href="/project/" aria-label="Start a project with Arda"><Arrow /></a>
           </div>
           <p className="contact-prompt" data-reveal>Tell me the idea, the format, your location and when you’d like to make it.</p>
-          <a className="email-link" data-reveal href={`mailto:${copy.email}`}>{copy.email}</a>
+          <div className="email-row" data-reveal>
+            <a className="email-link" href={`mailto:${copy.email}`}>{copy.email}</a>
+            {/* Phones: the big round button moves down beside the address. */}
+            <a className="contact-arrow contact-arrow-mobile" href="/project/" aria-label="Start a project with Arda"><Arrow /></a>
+          </div>
+          <a className="card-link" href="/card/" data-reveal>
+            <span className="card-link-dot" aria-hidden="true" />
+            <span><small className="eyebrow">Save my details</small>DIGITAL CARD</span>
+            <Arrow />
+          </a>
           <footer className="site-footer eyebrow">
             <span>© {new Date().getFullYear()} ARDA KURUCU</span>
             <span>VISUAL CREATIVE / ISTANBUL</span>
             <a href={copy.instagram} target="_blank" rel="noreferrer">INSTAGRAM <Arrow /></a>
+            <a href="/card/">DIGITAL CARD <Arrow /></a>
             <a href="#top">BACK TO TOP ↑</a>
           </footer>
         </section>
       </main>
-      <InstagramDrop href={copy.instagram} hidden={Boolean(story) || selectedIndex !== null || menuOpen} />
       {story && <Suspense fallback={null}><ServiceStory slug={story.slug} trigger={story.trigger} title={services.find(([slug]) => slug === story.slug)[1]} onClose={() => setStory(null)} /></Suspense>}
       {selectedIndex !== null && <ProjectDialog project={projects[selectedIndex]} index={selectedIndex} onClose={() => setSelectedIndex(null)} onNavigate={navigateProject} />}
     </div>

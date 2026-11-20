@@ -1,0 +1,574 @@
+{
+ "/media/portfolio/calkala-cover.jpg": [
+  360,
+  640
+ ],
+ "/media/portfolio/calkala-one.jpg": [
+  405,
+  720
+ ],
+ "/media/portfolio/calkala-three.jpg": [
+  405,
+  720
+ ],
+ "/media/portfolio/calkala-two.jpg": [
+  405,
+  720
+ ],
+ "/media/portfolio/city-vsco-01.jpg": [
+  1011,
+  1800
+ ],
+ "/media/portfolio/city-vsco-02.jpg": [
+  1200,
+  1800
+ ],
+ "/media/portfolio/city-vsco-03.jpg": [
+  1800,
+  1011
+ ],
+ "/media/portfolio/city-vsco-04.jpg": [
+  1011,
+  1800
+ ],
+ "/media/portfolio/city-vsco-05.jpg": [
+  1012,
+  1800
+ ],
+ "/media/portfolio/city-vsco-06.jpg": [
+  1012,
+  1800
+ ],
+ "/media/portfolio/city-vsco-07.jpg": [
+  1800,
+  1011
+ ],
+ "/media/portfolio/city-vsco-08.jpg": [
+  1012,
+  1800
+ ],
+ "/media/portfolio/city-vsco-09.jpg": [
+  1011,
+  1800
+ ],
+ "/media/portfolio/city-vsco-10.jpg": [
+  1011,
+  1800
+ ],
+ "/media/portfolio/city-vsco-11.jpg": [
+  1800,
+  1012
+ ],
+ "/media/portfolio/city-vsco-12.jpg": [
+  1800,
+  1012
+ ],
+ "/media/portfolio/colour-01.jpg": [
+  1350,
+  1800
+ ],
+ "/media/portfolio/colour-02.jpg": [
+  1351,
+  1800
+ ],
+ "/media/portfolio/colour-03.jpg": [
+  1438,
+  1800
+ ],
+ "/media/portfolio/dance-backstage.jpg": [
+  1011,
+  1800
+ ],
+ "/media/portfolio/dance-cover.jpg": [
+  1800,
+  1011
+ ],
+ "/media/portfolio/dance-ig-01.jpg": [
+  1350,
+  1800
+ ],
+ "/media/portfolio/dance-ig-02.jpg": [
+  1350,
+  1800
+ ],
+ "/media/portfolio/dance-ig-03.jpg": [
+  1350,
+  1800
+ ],
+ "/media/portfolio/dance-ig-04.jpg": [
+  1350,
+  1800
+ ],
+ "/media/portfolio/dance-ig-05.jpg": [
+  1800,
+  942
+ ],
+ "/media/portfolio/dance-ig-06.jpg": [
+  1350,
+  1800
+ ],
+ "/media/portfolio/dance-ig-07.jpg": [
+  1350,
+  1800
+ ],
+ "/media/portfolio/dance-ig-08.jpg": [
+  1800,
+  1010
+ ],
+ "/media/portfolio/dance-ig-09.jpg": [
+  1800,
+  1011
+ ],
+ "/media/portfolio/dance-ig-10.jpg": [
+  1800,
+  1011
+ ],
+ "/media/portfolio/dance-ig-11.jpg": [
+  1800,
+  1012
+ ],
+ "/media/portfolio/dance-ig-12.jpg": [
+  1800,
+  1012
+ ],
+ "/media/portfolio/dance-ig-13.jpg": [
+  1408,
+  1800
+ ],
+ "/media/portfolio/dance-ig-14.jpg": [
+  1408,
+  1800
+ ],
+ "/media/portfolio/dance-ig-15.jpg": [
+  1415,
+  1800
+ ],
+ "/media/portfolio/dance-ig-16.jpg": [
+  1415,
+  1800
+ ],
+ "/media/portfolio/dance-ig-17.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-18.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-19.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-20.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-21.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-22.jpg": [
+  1434,
+  1800
+ ],
+ "/media/portfolio/dance-ig-23.jpg": [
+  1434,
+  1800
+ ],
+ "/media/portfolio/dance-ig-24.jpg": [
+  1434,
+  1800
+ ],
+ "/media/portfolio/dance-ig-25.jpg": [
+  1434,
+  1800
+ ],
+ "/media/portfolio/dance-ig-26.jpg": [
+  1434,
+  1800
+ ],
+ "/media/portfolio/dance-ig-27.jpg": [
+  1434,
+  1800
+ ],
+ "/media/portfolio/dance-ig-28.jpg": [
+  1434,
+  1800
+ ],
+ "/media/portfolio/dance-ig-29.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-30.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-31.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-32.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-33.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-34.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-35.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-36.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-37.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-38.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-39.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-40.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-41.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-42.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-43.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-44.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-45.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-46.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-47.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-48.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-49.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-50.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-51.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-ig-52.jpg": [
+  1800,
+  1800
+ ],
+ "/media/portfolio/dance-monochrome.jpg": [
+  1200,
+  1800
+ ],
+ "/media/portfolio/dance-pair.jpg": [
+  1235,
+  1800
+ ],
+ "/media/portfolio/dance-stage.jpg": [
+  1011,
+  1800
+ ],
+ "/media/portfolio/generative-01.jpg": [
+  1344,
+  1800
+ ],
+ "/media/portfolio/generative-02.jpg": [
+  1344,
+  1800
+ ],
+ "/media/portfolio/generative-03.jpg": [
+  1344,
+  1800
+ ],
+ "/media/portfolio/generative-04.jpg": [
+  1344,
+  1800
+ ],
+ "/media/portfolio/generative-05.jpg": [
+  1344,
+  1800
+ ],
+ "/media/portfolio/generative-06.jpg": [
+  1344,
+  1800
+ ],
+ "/media/portfolio/hero-portrait.jpg": [
+  1350,
+  1800
+ ],
+ "/media/portfolio/lubemak-cover.jpg": [
+  720,
+  1280
+ ],
+ "/media/portfolio/night-bubble.jpg": [
+  1800,
+  1011
+ ],
+ "/media/portfolio/night-cinema.jpg": [
+  1011,
+  1800
+ ],
+ "/media/portfolio/night-city.jpg": [
+  1011,
+  1800
+ ],
+ "/media/portfolio/night-cone.jpg": [
+  1011,
+  1800
+ ],
+ "/media/portfolio/night-lights.jpg": [
+  1011,
+  1800
+ ],
+ "/media/portfolio/night-river.jpg": [
+  1800,
+  1011
+ ],
+ "/media/portfolio/portrait-architecture.jpg": [
+  1200,
+  1800
+ ],
+ "/media/portfolio/portrait-editorial.jpg": [
+  1200,
+  1800
+ ],
+ "/media/portfolio/portrait-foliage-one.jpg": [
+  1200,
+  1800
+ ],
+ "/media/portfolio/portrait-foliage-two.jpg": [
+  1200,
+  1800
+ ],
+ "/media/portfolio/portrait-restaurant.jpg": [
+  1350,
+  1800
+ ],
+ "/media/portfolio/portrait-window.jpg": [
+  1012,
+  1800
+ ],
+ "/media/portfolio/sapanca-01.jpg": [
+  1276,
+  718
+ ],
+ "/media/portfolio/sapanca-02.jpg": [
+  1276,
+  718
+ ],
+ "/media/portfolio/sapanca-03.jpg": [
+  1276,
+  718
+ ],
+ "/media/portfolio/sapanca-04.jpg": [
+  1276,
+  718
+ ],
+ "/media/portfolio/sapanca-05.jpg": [
+  1276,
+  718
+ ],
+ "/media/portfolio/sapanca-06.jpg": [
+  1276,
+  718
+ ],
+ "/media/portfolio/society-one.jpg": [
+  720,
+  405
+ ],
+ "/media/portfolio/society-three.jpg": [
+  720,
+  405
+ ],
+ "/media/portfolio/society-two.jpg": [
+  720,
+  405
+ ],
+ "/media/portfolio/studio-portrait-01.jpg": [
+  1351,
+  1800
+ ],
+ "/media/portfolio/studio-portrait-02.jpg": [
+  1351,
+  1800
+ ],
+ "/media/portfolio/studio-portrait-03.jpg": [
+  1351,
+  1800
+ ],
+ "/media/portfolio/studio-portrait-04.jpg": [
+  1800,
+  1011
+ ],
+ "/media/portfolio/studio-portrait-05.jpg": [
+  1800,
+  1011
+ ],
+ "/media/portfolio/studio-portrait-06.jpg": [
+  1800,
+  1011
+ ],
+ "/media/portfolio/studio-portrait-07.jpg": [
+  1440,
+  1800
+ ],
+ "/media/portfolio/studio-portrait-08.jpg": [
+  1440,
+  1800
+ ],
+ "/media/portfolio/studio-portrait-09.jpg": [
+  1438,
+  1800
+ ],
+ "/media/portfolio/studio-portrait-10.jpg": [
+  1800,
+  1128
+ ],
+ "/media/portfolio/studio-portrait-11.jpg": [
+  1800,
+  1130
+ ],
+ "/media/portfolio/studio-portrait-12.jpg": [
+  1440,
+  1800
+ ],
+ "/media/portfolio/studio-portrait-13.jpg": [
+  1440,
+  1800
+ ],
+ "/media/portfolio/studio-portrait-14.jpg": [
+  1440,
+  1800
+ ],
+ "/media/portfolio/tanabay-01.jpg": [
+  1280,
+  536
+ ],
+ "/media/portfolio/tanabay-02.jpg": [
+  1280,
+  536
+ ],
+ "/media/portfolio/tanabay-03.jpg": [
+  1280,
+  536
+ ],
+ "/media/portfolio/tanabay-04.jpg": [
+  1280,
+  536
+ ],
+ "/media/portfolio/tanabay-05.jpg": [
+  1280,
+  536
+ ],
+ "/media/portfolio/tanabay-06.jpg": [
+  1280,
+  536
+ ],
+ "/media/portfolio/tanabay-07.jpg": [
+  1280,
+  536
+ ],
+ "/media/portfolio/tanabay-08.jpg": [
+  1280,
+  536
+ ],
+ "/media/portfolio/tanabay-09.jpg": [
+  1280,
+  536
+ ],
+ "/media/portfolio/tanabay-10.jpg": [
+  1280,
+  536
+ ],
+ "/media/portfolio/tanabay-11.jpg": [
+  1280,
+  536
+ ],
+ "/media/portfolio/tanabay-cover.jpg": [
+  1280,
+  536
+ ],
+ "/media/portfolio/tanabay-photo.jpg": [
+  1350,
+  1800
+ ],
+ "/media/portfolio/tennis-action.jpg": [
+  1011,
+  1800
+ ],
+ "/media/portfolio/tennis-focus.jpg": [
+  1800,
+  1012
+ ],
+ "/media/portfolio/that-stare.jpg": [
+  1350,
+  1800
+ ],
+ "/media/portfolio/vasiyet-01.jpg": [
+  1272,
+  557
+ ],
+ "/media/portfolio/vasiyet-02.jpg": [
+  1272,
+  557
+ ],
+ "/media/portfolio/vasiyet-03.jpg": [
+  1272,
+  557
+ ],
+ "/media/portfolio/vasiyet-04.jpg": [
+  1272,
+  557
+ ],
+ "/media/portfolio/vasiyet-05.jpg": [
+  1272,
+  557
+ ],
+ "/media/portfolio/vasiyet-06.jpg": [
+  1272,
+  557
+ ],
+ "/media/portfolio/vasiyet-07.jpg": [
+  1272,
+  557
+ ],
+ "/media/portfolio/vasiyet-cover.jpg": [
+  1272,
+  557
+ ]
+}

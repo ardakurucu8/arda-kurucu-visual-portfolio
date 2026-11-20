@@ -550,8 +550,10 @@ function PhoneFeelingScene() {
     <svg className="scene" viewBox="0 0 800 450" aria-hidden="true">
       <rect className="ink-edge" fill="#d3cab8" x="90" y="300" width="640" height="170" rx="26" />
       <BackFigure palette={MODEL} longHair narrow />
-      <Taper points={[[434, 418, 21], [466, 380, 17], [492, 340, 14]]} color={SLEEVE_SHADE(MODEL.skin)} />
+      <Taper points={[[434, 418, 21], [466, 384, 16], [494, 340, 13]]} color={SLEEVE_SHADE(MODEL.skin)} />
       <Taper points={[[386, 364, 34], [412, 392, 29], [434, 420, 25]]} color={MODEL.shirt} />
+      {/* Right hand: the palm cradles the back of the phone, so only its heel shows below it. */}
+      <path className="ink-edge" fill={SLEEVE_SHADE(MODEL.skin)} d="M488 306C485 321 490 335 500 340C511 344 523 337 528 323L530 306Z" />
       <rect x="470" y="168" width="76" height="146" rx="12" fill={INK} />
       <svg x="477" y="180" width="62" height="124" viewBox="0 0 152 304" data-letter="to">
         <rect width="152" height="304" fill="#faf8f3" />
@@ -571,9 +573,9 @@ function PhoneFeelingScene() {
           <path className="ln thin" d="M10 12h40M120 12h8M136 12h8" />
         </g>
       </svg>
-      <path className="ink-edge" fill={MODEL.skin} d="M486 344C478 330 480 312 492 304L532 300C544 304 548 318 542 332C534 344 500 350 486 344Z" />
-      {[256, 274, 292].map((y) => <rect key={y} className="ink-edge" fill={MODEL.skin} x="540" y={y} width="13" height="15" rx="7" />)}
-      <path className="ink-edge" fill={MODEL.skin} d="M474 316C466 306 468 288 478 286C484 290 484 306 482 318Z" />
+      {/* Fingertips curl round the left edge; the thumb rests along the right edge, as a right hand holds it. */}
+      {[238, 256, 274].map((y) => <rect key={y} className="ink-edge" fill={MODEL.skin} x="465" y={y} width="9" height="13" rx="4.5" />)}
+      <Taper points={[[532, 328, 14], [541, 304, 11], [537, 282, 9]]} color={MODEL.skin} />
       <Sparkles points={[[620, 110, 12], [400, 120, 8], [640, 260, 9], [600, 190, 7], [440, 210, 7]]} />
     </svg>
   );
@@ -621,6 +623,8 @@ const stories = {
 const SEGMENT = 1.25; // viewport heights of scroll per stage
 const EXIT = 0.8; // extra scroll after the last stage that returns to the page
 const ease = (value) => value * value * (3 - 2 * value);
+const unease = (value) => 0.5 - Math.sin(Math.asin(1 - 2 * value) / 3);
+const SWIPE_MIN = 45; // px of horizontal finger travel that turns the page
 
 function Letter() {
   return (
@@ -750,13 +754,70 @@ export default function ServiceStory({slug, title, trigger, onClose}) {
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
     const onResize = () => { measure(); update(); };
 
+    // Touch: the stages sit side by side, so a sideways swipe moves them sideways.
+    // The track follows the finger, then settles on the next/previous stage (or returns past the last).
+    const positionOf = (top) => {
+      const segment = SEGMENT * scroller.clientHeight;
+      const raw = top / segment;
+      const index = Math.min(last, Math.floor(raw));
+      if (index >= last) return last + Math.max(0, top - last * segment) / (EXIT * scroller.clientHeight);
+      return index + ease(Math.min(1, Math.max(0, (raw - index - 0.2) / 0.6)));
+    };
+    const topOf = (position) => {
+      const height = scroller.clientHeight;
+      const segment = SEGMENT * height;
+      if (position >= last) return last * segment + (position - last) * EXIT * height;
+      const index = Math.floor(position);
+      const fraction = position - index;
+      return (fraction <= 0 ? index : index + 0.2 + 0.6 * unease(fraction)) * segment;
+    };
+    let touch = null;
+    const onTouchStart = (event) => {
+      if (event.touches.length !== 1) { touch = null; return; }
+      const point = event.touches[0];
+      const start = positionOf(scroller.scrollTop);
+      touch = {x: point.clientX, y: point.clientY, axis: null, start, from: Math.round(start)};
+    };
+    const onTouchMove = (event) => {
+      if (!touch) return;
+      const point = event.touches[0];
+      const dx = point.clientX - touch.x;
+      const dy = point.clientY - touch.y;
+      if (!touch.axis) {
+        if (Math.hypot(dx, dy) < 8) return;
+        touch.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      }
+      if (touch.axis !== 'x') return;
+      event.preventDefault();
+      touch.dx = dx;
+      const position = Math.max(0, Math.min(last + 0.95, touch.start - dx / scroller.clientWidth));
+      scroller.scrollTop = topOf(position);
+    };
+    const onTouchEnd = () => {
+      if (!touch || touch.axis !== 'x') { touch = null; return; }
+      const dx = touch.dx || 0;
+      const target = dx <= -SWIPE_MIN ? touch.from + 1 : dx >= SWIPE_MIN ? touch.from - 1 : touch.from;
+      touch = null;
+      const behavior = reduced.current ? 'auto' : 'smooth';
+      if (target > last) scroller.scrollTo({top: topOf(last + 1), behavior});
+      else scroller.scrollTo({top: Math.max(0, target) * SEGMENT * scroller.clientHeight, behavior});
+    };
+
     measure();
     update();
     scroller.addEventListener('scroll', onScroll, {passive: true});
+    scroller.addEventListener('touchstart', onTouchStart, {passive: true});
+    scroller.addEventListener('touchmove', onTouchMove, {passive: false});
+    scroller.addEventListener('touchend', onTouchEnd);
+    scroller.addEventListener('touchcancel', onTouchEnd);
     window.addEventListener('resize', onResize);
     return () => {
       cancelAnimationFrame(frame);
       scroller.removeEventListener('scroll', onScroll);
+      scroller.removeEventListener('touchstart', onTouchStart);
+      scroller.removeEventListener('touchmove', onTouchMove);
+      scroller.removeEventListener('touchend', onTouchEnd);
+      scroller.removeEventListener('touchcancel', onTouchEnd);
       window.removeEventListener('resize', onResize);
     };
   }, [slug]);
@@ -769,6 +830,7 @@ export default function ServiceStory({slug, title, trigger, onClose}) {
   const clip = phase === 'open' ? 'inset(0px 0px 0px 0px)' : `inset(${band.top}px 0px ${Math.max(0, window.innerHeight - band.bottom)}px 0px)`;
   const lineY = phase === 'open' ? [0, window.innerHeight - 1] : [band.top, band.bottom - 1];
   const atLast = active === last;
+  const touchScreen = typeof window !== 'undefined' && window.matchMedia('(hover: none) and (pointer: coarse)').matches;
 
   return (
     <div className={`story story-${phase}`} ref={rootRef} role="dialog" aria-modal="true" aria-labelledby="story-title">
@@ -805,11 +867,13 @@ export default function ServiceStory({slug, title, trigger, onClose}) {
                 })}
                 <div className="story-letter" ref={letterRef}><Letter /></div>
               </div>
-              <div className={`story-next${atLast ? ' is-last' : ''}`} aria-hidden="true">
-                {atLast
+              <div className={`story-next${atLast && !touchScreen ? ' is-last' : ''}`} aria-hidden="true">
+                {atLast && !touchScreen
                   ? <svg viewBox="0 0 24 72"><path d="M12 2V68M2 56l10 12 10-12" /></svg>
                   : <svg viewBox="0 0 96 24"><path d="M2 12H92M80 2l12 10-12 10" /></svg>}
-                <span className="eyebrow">{atLast ? (ending ? 'RETURN' : 'SCROLL TO RETURN') : 'SCROLL'}</span>
+                <span className="eyebrow">{touchScreen
+                  ? (atLast ? (ending ? 'RETURN' : 'SWIPE TO RETURN') : 'SWIPE')
+                  : (atLast ? (ending ? 'RETURN' : 'SCROLL TO RETURN') : 'SCROLL')}</span>
               </div>
             </div>
           </div>

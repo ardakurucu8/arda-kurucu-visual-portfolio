@@ -1,0 +1,4 @@
+// Kurucuvisuals "akv" mark, redrawn as vector from the supplied 1200×1200 artwork.
+export const LOGO_VIEWBOX = '300 290 610 433';
+export const LOGO_PATH = 'M301 719L408 499L509 705V374H554V597L646 499H731L792 624L851 499H899L791 721L691 516L610 602L707 719H649L554 603V719H468L408 597L349 719Z';
+export const LOGO_DOT = {cx: 869, cy: 331, r: 39, fill: '#6e0000'};
