@@ -1,4 +1,5 @@
 # Netlify build settings — every push to main rebuilds and redeploys the site.
+# The project form (/project/) uses Netlify Forms: Forms → Submission notifications sends each message by email.
 [build]
   command = "npm run build"
   publish = "dist"
