@@ -1,8 +1,7 @@
-import mediaSizes from './data/mediaSizes.json' with {type: 'json'};
+import {ratioOf} from './media.js';
 import mediaSharpness from './data/mediaSharpness.json' with {type: 'json'};
 
 export const GALLERY_GAP = 14;
-const ratioOf = (src) => { const size = mediaSizes[src]; return size ? size[0] / size[1] : 1.5; };
 
 // `largeOverride` (a list of image paths) replaces the automatic sharpness pick for one album.
 export function layoutGallery(images, width, largeOverride) {

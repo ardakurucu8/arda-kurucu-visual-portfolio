@@ -11,8 +11,9 @@ em { font-family: Newsreader, serif; font-weight: 400; }
 .card { position: relative; min-height: 100svh; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; }
 
 /* Background reel: two players crossfade between short moments of two films. */
-.reel { position: absolute; inset: 0; }
-.reel video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(.85) brightness(.55); }
+.reel { position: absolute; inset: 0; overflow: hidden; }
+/* The reel file carries the black akv download band at the bottom; draw it 7.2% taller and anchor to the top so the band stays below the frame. */
+.reel video { position: absolute; left: 0; top: 0; width: 100%; height: 107.2%; object-fit: cover; object-position: 50% 0; filter: saturate(.85) brightness(.55); }
 .card::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(11,11,10,.25) 0%, rgba(11,11,10,.05) 32%, #0b0b0a 78%); }
 
 .bar { position: absolute; z-index: 2; top: calc(20px + env(safe-area-inset-top)); left: 22px; right: 22px; display: flex; justify-content: space-between; align-items: center; }

@@ -396,7 +396,7 @@ export default function WorkJourney({items, onOpen, mobile = false}) {
               aria-label={`View ${project.title}. ${project.role}`}
             >
               <span className="journey-card-frame">
-                <img src={thumb(project.cover)} alt="" loading="eager" decoding="async" draggable="false" />
+                <span className="band band-fill"><img src={thumb(project.cover)} alt="" loading="eager" decoding="async" draggable="false" /></span>
                 <span className="journey-card-number eyebrow">NO. {String(index + 1).padStart(2, '0')}</span>
                 <span className="journey-card-action eyebrow">OPEN PROJECT ↗</span>
               </span>

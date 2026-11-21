@@ -1,0 +1,10 @@
+# Hero showreel: <file in incoming/originals/video> <start seconds> [letterbox bar px to crop]
+tanabay-him-and-i.mp4 3.5
+vasiyet-trailer.mp4 8.0 80
+tanabay-perche-ti-amo.mp4 46.5
+society-bts-2.mp4 21.5
+sapanca-edit.mp4 43.5
+tanabay-him-and-i.mp4 94.0
+vasiyet-trailer.mp4 26.5 80
+society-bts-2.mp4 44.5
+tanabay-him-and-i.mp4 63.5

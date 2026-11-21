@@ -35,6 +35,7 @@ MEVCUT TASARIM KARARLARI
 - Proje verileri `src/data/projects.js` içindedir. Varsayarak yeni müşteri, yıl, rol, işbirlikçi veya kredi yazma. Eksik bilgiye “confirmation pending” yaklaşımıyla davran ve Arda'ya açık soru sor.
 - Genel metinler ve iletişim `src/App.jsx` içindedir.
 - Yeni medya eklenirse web türevi optimize edilmeli; ham master dosya depoya konmamalı.
+- İndirme şeridi: yayındaki her fotoğraf ve videonun altında siyah bir şerit ve sağında beyaz akv logosu var (dosya yüksekliğinin %7'si). Site bu şeridi her yerde kırparak gizler (`.band` sınıfı, `--band` CSS değişkeni, `src/BandVideo.jsx` kendi video kontrolleri); sadece indirilen dosyada görünür. Temiz orijinaller Arda'nın bilgisayarında `incoming/originals/` (Git dışı). Yeni medya: temiz hâli `incoming/originals/`'a (videolar `incoming/originals/video/`), sonra `sh scripts/band.sh photos`, `sh scripts/band.sh videos`, `sh scripts/make-thumbs.sh`.
 - Hız için: yazı tipleri `public/fonts` içinde (dış sunucu yok). Kartlar, vadi ve albümler fotoğrafların 1200 px kopyalarını (`public/media/portfolio/thumbs/`) kullanır; yeni fotoğraf eklenince macOS'ta `sh scripts/make-thumbs.sh` çalıştırılır. 3D vadi kodu Work bölümüne yaklaşınca yüklenir.
 - Proje galerileri VSCO profili gibi sütunlu, organik bir düzendedir (`src/galleryLayout.js`): fotoğraflar asla kırpılmaz, kendi oranlarında kalır; her albümdeki en net ~%40 iki sütun genişliğinde, yumuşak video kareleri tek sütun. Fotoğrafa basınca tam ekran açılır. Netlik puanları `src/data/mediaSharpness.json` içinde; yeni fotoğraf eklenince macOS'ta `swift scripts/media-sharpness.swift` çalıştırılır.
 
@@ -85,3 +86,7 @@ Arda'nın kendi düzenlemeleri için en kolay akış GitHub Desktop'tır:
 5. Push origin
 
 İki kişi aynı anda büyük değişiklik yapacaksa doğrudan `main` yerine ayrı branch ve pull request kullanmak daha güvenlidir.
+
+## Hero showreel and project links (2026-11-21)
+- Hero plays a silent 22 s reel (`public/media/portfolio/video/hero-reel.mp4`, phones get `hero-reel-sm.mp4`; poster `hero-reel.jpg`). Shot list: `scripts/band/hero-reel.txt`. Rebuild: `cat scripts/band/Logo.swift scripts/band/reel.swift > /tmp/reel.swift && swiftc -O /tmp/reel.swift -o /tmp/reel`, then `/tmp/reel scripts/band/hero-reel.txt incoming/originals/video public/media/portfolio/video/hero-reel.mp4 960 540 1100000` (and `… hero-reel-sm.mp4 640 360 650000`). The reel carries the akv band like every other video. It waits for page load, skips reduced-motion / data-saver, and pauses off-screen.
+- Every project has its own link: `https://ardakurucu.com/work/<slug>/`. `npm run build` runs `scripts/project-pages.mjs`, which writes `dist/work/<slug>/index.html` with that project's title, summary and preview image (`public/og/<slug>.jpg`, 1200×630) and adds them to the sitemap. The dialog has a SHARE button (phone share sheet, or copy link on desktop); the back button closes the project.

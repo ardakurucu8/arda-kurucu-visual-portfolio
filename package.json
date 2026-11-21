@@ -7,7 +7,7 @@
     "predev": "node scripts/media-sizes.mjs",
     "dev": "vite --host 0.0.0.0",
     "prebuild": "node scripts/media-sizes.mjs",
-    "build": "vite build",
+    "build": "vite build && node scripts/project-pages.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "capture": "node scripts/capture-screenshots.mjs"
   },

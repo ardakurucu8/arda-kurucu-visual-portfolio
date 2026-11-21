@@ -3,7 +3,8 @@ import gsap from 'gsap';
 import {ScrollTrigger} from 'gsap/ScrollTrigger';
 import {projects} from './data/projects.js';
 import {layoutGallery} from './galleryLayout.js';
-import {thumb} from './media.js';
+import {thumb, ratioOf} from './media.js';
+import BandVideo from './BandVideo.jsx';
 import Title from './Title.jsx';
 import {createPortal} from 'react-dom';
 import {LOGO_DOT, LOGO_PATH, LOGO_VIEWBOX} from './brand.js';
@@ -28,15 +29,82 @@ const copy = {
 // Drawn as SVG so phones never swap the arrow characters for colour emoji.
 const ARROW_PATHS = {
   down: 'M12 3v18M5 14l7 7 7-7',
+  up: 'M12 21V3M5 10l7-7 7 7',
   left: 'M21 12H3M10 5l-7 7 7 7',
   right: 'M3 12h18M14 5l7 7-7 7',
   ne: 'M6 18 18 6M8 6h10v10',
 };
 
+// "#top" points at the header, which is sticky on phones — the browser sees it as already in
+// view and does not scroll. Scroll the page itself instead.
+function scrollToTop(event) {
+  event.preventDefault();
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.scrollTo({top: 0, behavior: reduce ? 'auto' : 'smooth'});
+  if (window.location.hash) history.replaceState(null, '', window.location.pathname + window.location.search);
+}
+
 function Arrow({direction = 'ne'}) {
   return (
     <span className="arrow" aria-hidden="true">
       <svg viewBox="0 0 24 24"><path d={ARROW_PATHS[direction] || ARROW_PATHS.ne} /></svg>
+    </span>
+  );
+}
+
+// Hero showreel: a silent 22-second loop cut from the films (scripts/band/reel.swift).
+// The poster shows at once; the film starts after the page has loaded, on screens that allow
+// motion and without data saver, and pauses while the hero is out of view.
+const HERO_REEL = {
+  poster: '/media/portfolio/video/hero-reel.jpg',
+  large: '/media/portfolio/video/hero-reel.mp4',
+  small: '/media/portfolio/video/hero-reel-sm.mp4',
+};
+
+function HeroReel() {
+  const video = useRef(null);
+  const [playing, setPlaying] = useState(false);
+
+  useEffect(() => {
+    const element = video.current;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!element || reduce || navigator.connection?.saveData) return undefined;
+    let visible = true;
+    let timer = 0;
+    const start = () => {
+      timer = window.setTimeout(() => {
+        element.src = window.matchMedia('(max-width: 760px)').matches ? HERO_REEL.small : HERO_REEL.large;
+        if (visible) element.play().catch(() => {});
+      }, 400);
+    };
+    if (document.readyState === 'complete') start(); else window.addEventListener('load', start, {once: true});
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (!element.src) return;
+      if (visible) element.play().catch(() => {}); else element.pause();
+    });
+    observer.observe(element);
+    return () => { window.removeEventListener('load', start); window.clearTimeout(timer); observer.disconnect(); };
+  }, []);
+
+  return (
+    <span className="band-box hero-photo">
+      <span className="band band-cover" style={{'--r': 16 / 9}}>
+        <img src={HERO_REEL.poster} alt="Stills from Arda Kurucu's films: sea, a wedding, a film set and a short-film scene" fetchPriority="high" />
+        <video
+          ref={video}
+          className={`hero-reel${playing ? ' is-on' : ''}`}
+          muted
+          loop
+          playsInline
+          preload="none"
+          disablePictureInPicture
+          aria-hidden="true"
+          tabIndex={-1}
+          onPlaying={() => setPlaying(true)}
+          onContextMenu={(event) => event.preventDefault()}
+        />
+      </span>
     </span>
   );
 }
@@ -48,7 +116,7 @@ function LoadingCurtain() {
     let cancelled = false;
     // Phones only wait for the hero photo; larger screens also warm the first cover.
     const phone = window.matchMedia('(max-width: 760px)').matches;
-    const critical = [thumb('/media/portfolio/hero-portrait.jpg'), ...(phone ? [] : [thumb(projects[0].cover)])];
+    const critical = [HERO_REEL.poster, ...(phone ? [] : [thumb(projects[0].cover)])];
     const timer = window.setTimeout(() => !cancelled && setState((current) => ({...current, visible: true})), 120);
     let loaded = 0;
     const load = (src) => new Promise((resolve) => {
@@ -118,7 +186,7 @@ function Lightbox({images, index, title, onChange, onClose}) {
         <span className="eyebrow">{String(index + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}</span>
         <button type="button" className="eyebrow" ref={closeRef} onClick={onClose}>CLOSE <span aria-hidden="true">×</span></button>
       </div>
-      <img key={images[index]} src={images[index]} alt={`${title} — photo ${index + 1}`} />
+      <span className="band lightbox-photo" key={images[index]} style={{'--r': ratioOf(images[index])}}><img src={images[index]} alt={`${title} — photo ${index + 1}`} draggable="false" /></span>
       {count > 1 && <>
         <button type="button" className="lightbox-nav prev" aria-label="Previous photo" onClick={() => go(-1)}><Arrow direction="left" /></button>
         <button type="button" className="lightbox-nav next" aria-label="Next photo" onClick={() => go(1)}><Arrow direction="right" /></button>
@@ -152,8 +220,8 @@ function JustifiedGallery({images, title, alt, large}) {
           return (
             <button key={item.src} type="button" className="gallery-item" aria-label={`Open photo ${position + 1} of ${order.length}`}
               style={{transform: `translate(${item.x}px, ${item.y}px)`, width: `${item.w}px`, height: `${item.h}px`}} onClick={() => setOpen(position)}>
-              <img src={thumb(item.src)} loading={item.y > 900 ? 'lazy' : 'eager'} decoding="async"
-                alt={position === 0 ? alt : `${title} selected image ${position + 1}`} />
+              <span className="band band-fill"><img src={thumb(item.src)} loading={item.y > 900 ? 'lazy' : 'eager'} decoding="async"
+                alt={position === 0 ? alt : `${title} selected image ${position + 1}`} /></span>
             </button>
           );
         })}
@@ -163,6 +231,14 @@ function JustifiedGallery({images, title, alt, large}) {
   );
 }
 
+const projectPath = (project) => `/work/${project.slug}/`;
+const indexFromPath = () => {
+  const match = window.location.pathname.match(/^\/work\/([^/]+)\/?$/);
+  const index = match ? projects.findIndex((project) => project.slug === decodeURIComponent(match[1])) : -1;
+  return index >= 0 ? index : null;
+};
+const SITE_TITLE = document.title;
+
 function ProjectDialog({project, index, onClose, onNavigate}) {
   const [clipIndex, setClipIndex] = useState(0);
   useEffect(() => setClipIndex(0), [project]);
@@ -171,6 +247,28 @@ function ProjectDialog({project, index, onClose, onNavigate}) {
   const dialogRef = useRef(null);
   const closeRef = useRef(null);
   const previousFocus = useRef(null);
+  const [copied, setCopied] = useState(false);
+  useEffect(() => setCopied(false), [project]);
+  // Every project has its own address (/work/<slug>/) with its own link preview.
+  const share = async () => {
+    const url = `${window.location.origin}${projectPath(project)}`;
+    if (navigator.share && window.matchMedia('(pointer: coarse)').matches) {
+      try { await navigator.share({title: `${project.title} — Arda Kurucu`, url}); } catch { /* closed */ }
+      return;
+    }
+    // Copy within the click itself (works everywhere); the Clipboard API is the fallback.
+    const field = Object.assign(document.createElement('textarea'), {value: url, readOnly: true});
+    field.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.append(field);
+    field.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch { ok = false; }
+    field.remove();
+    closeRef.current?.previousElementSibling?.focus();
+    if (!ok) navigator.clipboard?.writeText(url).catch(() => {});
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  };
 
   useEffect(() => {
     previousFocus.current = document.activeElement;
@@ -202,12 +300,15 @@ function ProjectDialog({project, index, onClose, onNavigate}) {
       <article className="project-dialog" role="dialog" aria-modal="true" aria-labelledby="project-title" ref={dialogRef}>
         <header className="dialog-bar">
           <p className="eyebrow">PROJECT {String(index + 1).padStart(2, '0')} / {String(projects.length).padStart(2, '0')}</p>
-          <button className="text-button" ref={closeRef} onClick={onClose}>CLOSE <span aria-hidden="true">×</span></button>
+          <div className="dialog-actions">
+            <button className="text-button" type="button" onClick={share} aria-live="polite">{copied ? 'LINK COPIED' : 'SHARE'} <svg className="share-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M5 13v7h14v-7" /></svg></button>
+            <button className="text-button" ref={closeRef} onClick={onClose}>CLOSE <span aria-hidden="true">×</span></button>
+          </div>
         </header>
         <div className={`dialog-visual${clip ? ' has-video' : ''}`}>
           {clip
-            ? <video key={clip.src} src={clip.src} poster={clipIndex === 0 ? thumb(project.cover) : clip.poster} controls playsInline preload="metadata" aria-label={`${project.title} — ${clip.title}`} />
-            : <img src={thumb(project.cover)} alt={project.alt} />}
+            ? <BandVideo key={clip.src} src={clip.src} poster={clipIndex === 0 ? thumb(project.cover) : clip.poster} label={`${project.title} — ${clip.title}`} />
+            : <span className="band dialog-photo" style={{'--r': ratioOf(project.cover)}}><img src={thumb(project.cover)} alt={project.alt} /></span>}
           <span className="media-flag">{project.label}</span>
         </div>
         {clips.length > 1 && <div className="dialog-clips" role="group" aria-label={`${project.title} videos`}>
@@ -215,7 +316,7 @@ function ProjectDialog({project, index, onClose, onNavigate}) {
           <div>
             {clips.map((item, itemIndex) => (
               <button key={item.src} type="button" aria-pressed={itemIndex === clipIndex} onClick={() => setClipIndex(itemIndex)}>
-                <img src={itemIndex === 0 ? thumb(project.cover) : item.poster} alt="" loading="lazy" />
+                <span className="band-box clip-thumb"><span className="band band-cover" style={{'--r': itemIndex === 0 ? ratioOf(project.cover) : 16 / 9}}><img src={itemIndex === 0 ? thumb(project.cover) : item.poster} alt="" loading="lazy" /></span></span>
                 <span><small>{String(itemIndex + 1).padStart(2, '0')}</small>{item.title}</span>
               </button>
             ))}
@@ -259,7 +360,7 @@ function Header({open, setOpen}) {
   const closeMenu = () => setOpen(false);
   return (
     <header className={`site-header ${open ? 'menu-open' : ''}`} id="top">
-      <a className="wordmark" href="#top" onClick={closeMenu}>
+      <a className="wordmark" href="#top" onClick={(event) => { closeMenu(); scrollToTop(event); }}>
         <span>ARDA KURUCU</span>
         <i className="wordmark-divider" aria-hidden="true" />
         <StudioMark />
@@ -297,7 +398,38 @@ function Header({open, setOpen}) {
 
 export default function App() {
   const [filter, setFilter] = useState('All');
-  const [selectedIndex, setSelectedIndex] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState(indexFromPath);
+  // Keep the address bar in step with the open project: opening adds a history entry,
+  // next/previous replaces it, closing goes back; the browser's back button closes it.
+  const pushedProject = useRef(false);
+  const previousIndex = useRef(selectedIndex);
+  useEffect(() => {
+    const previous = previousIndex.current;
+    previousIndex.current = selectedIndex;
+    document.title = selectedIndex === null ? SITE_TITLE : `${projects[selectedIndex].title} — Arda Kurucu`;
+    const target = selectedIndex === null ? '/' : projectPath(projects[selectedIndex]);
+    if (window.location.pathname === target) return;
+    if (selectedIndex !== null && previous === null) {
+      history.pushState({project: true}, '', target);
+      pushedProject.current = true;
+    } else if (selectedIndex !== null) {
+      history.replaceState(history.state, '', target);
+    } else if (pushedProject.current) {
+      pushedProject.current = false;
+      history.back();
+    } else {
+      history.replaceState(null, '', '/');
+    }
+  }, [selectedIndex]);
+  useEffect(() => {
+    const onPop = () => {
+      const index = indexFromPath();
+      pushedProject.current = index !== null && Boolean(history.state?.project);
+      setSelectedIndex(index);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
   const [menuOpen, setMenuOpen] = useState(false);
   // The 3D Work valley (three.js) only loads once the visitor nears the Work section.
   const workSentinel = useRef(null);
@@ -375,8 +507,10 @@ export default function App() {
               </div>
             </div>
             <figure className="hero-frame" data-intro>
-              <img src={thumb('/media/portfolio/hero-portrait.jpg')} alt="Editorial portrait of a woman reading at a softly lit restaurant table" fetchPriority="high" />
-              <figcaption><span>ARDA KURUCU / SELECTED PORTRAIT</span><span>PUBLIC PORTFOLIO / 2026</span></figcaption>
+              <i className="print-tape print-tape-left" aria-hidden="true" />
+              <i className="print-tape print-tape-right" aria-hidden="true" />
+              <HeroReel />
+              <figcaption><em>a story, and style.<span className="print-dot" aria-hidden="true" /></em><span>SHOWREEL / 2026</span></figcaption>
             </figure>
           </div>
           <div className="hero-rule eyebrow"><span>SELECTED VISUAL WORKS</span><span>SCROLL / 01</span></div>
@@ -401,7 +535,7 @@ export default function App() {
               return (
                 <button className="project-card" data-reveal key={project.slug} type="button" onClick={() => setSelectedIndex(projectIndex)} aria-label={`View ${project.title}. ${project.role}`}>
                   <span className="project-image" style={{aspectRatio: project.aspect}}>
-                    <img src={thumb(project.cover)} loading={visibleIndex > 1 ? 'lazy' : 'eager'} decoding="async" alt={project.alt} />
+                    <span className="band band-contain" style={{'--r': project.ratio}}><img src={thumb(project.cover)} loading={visibleIndex > 1 ? 'lazy' : 'eager'} decoding="async" alt={project.alt} /></span>
                     <span className="media-flag">{project.label}</span>
                     <span className="view-project">VIEW PROJECT <Arrow /></span>
                   </span>
@@ -471,7 +605,7 @@ export default function App() {
             <span>VISUAL CREATIVE / ISTANBUL</span>
             <a href={copy.instagram} target="_blank" rel="noreferrer">INSTAGRAM <Arrow /></a>
             <a href="/card/">DIGITAL CARD <Arrow /></a>
-            <a href="#top">BACK TO TOP ↑</a>
+            <a href="#top" onClick={scrollToTop}>BACK TO TOP <Arrow direction="up" /></a>
           </footer>
         </section>
       </main>
