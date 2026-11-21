@@ -749,7 +749,10 @@ export default function ServiceStory({slug, title, trigger, onClose}) {
       const after = scroller.scrollTop - last * segment;
       const isEnding = after > height * 0.1;
       if (isEnding !== wasEnding) { wasEnding = isEnding; setEnding(isEnding); }
-      if (after > EXIT * height * 0.9) close();
+      // Leave once the exit stretch is mostly scrolled, or the scroller has hit its end
+      // (on phones 100svh can be shorter than the scroller, so the full stretch may not exist).
+      const atEnd = scroller.scrollTop >= scroller.scrollHeight - scroller.clientHeight - 2;
+      if (after > EXIT * height * 0.9 || (after > height * 0.25 && atEnd)) close();
     };
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
     const onResize = () => { measure(); update(); };
@@ -799,7 +802,8 @@ export default function ServiceStory({slug, title, trigger, onClose}) {
       const target = dx <= -SWIPE_MIN ? touch.from + 1 : dx >= SWIPE_MIN ? touch.from - 1 : touch.from;
       touch = null;
       const behavior = reduced.current ? 'auto' : 'smooth';
-      if (target > last) scroller.scrollTo({top: topOf(last + 1), behavior});
+      // Swiping on past the last stage leaves the story straight away.
+      if (target > last) { close(); return; }
       else scroller.scrollTo({top: Math.max(0, target) * SEGMENT * scroller.clientHeight, behavior});
     };
 

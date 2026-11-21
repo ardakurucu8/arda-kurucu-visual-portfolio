@@ -10,47 +10,30 @@ const contact = {
   phone: '+905321710401',
   email: 'ardakurucu8@gmail.com',
   instagram: 'https://www.instagram.com/kurucuvisuals/',
-  city: 'Istanbul',
 };
 
-// Background reel: short moments from two films, alternating and crossfading.
-// Times avoid title cards; reduced-motion visitors get the still poster only.
-const SHOTS = [
-  ['/media/portfolio/video/tanabay-him-and-i.mp4', 62], ['/media/portfolio/video/vasiyet-trailer.mp4', 9],
-  ['/media/portfolio/video/tanabay-him-and-i.mp4', 98], ['/media/portfolio/video/vasiyet-trailer.mp4', 15],
-  ['/media/portfolio/video/tanabay-him-and-i.mp4', 119], ['/media/portfolio/video/vasiyet-trailer.mp4', 27],
-  ['/media/portfolio/video/tanabay-him-and-i.mp4', 35], ['/media/portfolio/video/vasiyet-trailer.mp4', 48],
-];
-const SHOT_MS = 4500;
-
+// Background reel: a single muted loop. Phones sometimes refuse autoplay (low-power mode,
+// data saver); then the still poster stays, and the first touch anywhere starts it.
 function startReel() {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const players = [...document.querySelectorAll('.reel video')];
-  let index = 0;
-  let front = 0;
-  const load = (player, [src, time]) => new Promise((resolve) => {
-    const seek = () => {
-      player.addEventListener('seeked', () => { player.play().catch(() => {}); resolve(); }, {once: true});
-      player.currentTime = time;
-    };
-    if (player.getAttribute('src') === src && player.readyState > 0) seek();
-    else { player.src = src; player.addEventListener('loadedmetadata', seek, {once: true}); }
-  });
-  load(players[0], SHOTS[0]).then(() => {
-    const next = async () => {
-      if (document.hidden) return;
-      index = (index + 1) % SHOTS.length;
-      const back = 1 - front;
-      await load(players[back], SHOTS[index]);
-      players[back].classList.add('is-on');
-      players[front].classList.remove('is-on');
-      const old = players[front];
-      setTimeout(() => old.pause(), 1300);
-      front = back;
-    };
-    setInterval(next, SHOT_MS);
-  });
+  const video = document.querySelector('.reel video');
+  if (!video) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { video.removeAttribute('autoplay'); video.pause(); return; }
+  video.muted = true;
+  const play = () => video.play().catch(() => {});
+  play();
+  document.addEventListener('touchstart', play, {once: true, passive: true});
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) play(); });
 }
+
+// Contact photo for the vCard: fetched once from /media/card-photo.jpg if it exists.
+let photoBase64 = '';
+fetch('/media/card-photo.jpg').then((response) => (response.ok ? response.blob() : null)).then((blob) => {
+  if (!blob || !blob.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = () => { photoBase64 = String(reader.result).split(',')[1] || ''; };
+  reader.readAsDataURL(blob);
+}).catch(() => {});
+const photoLines = () => (photoBase64 ? [`PHOTO;ENCODING=b;TYPE=JPEG:${photoBase64}`] : []);
 
 // "Save contact" hands the phone a vCard; the site address is taken from wherever the card is hosted.
 function saveContact() {
@@ -66,7 +49,7 @@ function saveContact() {
     `EMAIL;TYPE=INTERNET:${contact.email}`,
     `URL:${window.location.origin}/`,
     `X-SOCIALPROFILE;TYPE=instagram:${contact.instagram}`,
-    `ADR;TYPE=WORK:;;;${esc(contact.city)};;;Türkiye`,
+    ...photoLines(),
     'END:VCARD',
   ];
   const blob = new Blob([lines.join('\r\n')], {type: 'text/vcard;charset=utf-8'});
