@@ -1,6 +1,7 @@
 import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {LOGO_DOT, LOGO_PATH} from './brand.js';
 import './story.css';
+import {useLang} from './i18n.js';
 
 // Full-screen, scroll-driven service stories. Scrolling moves the stages from
 // right to left; each centred stage loops its own CSS animation like a GIF.
@@ -637,7 +638,8 @@ function Letter() {
 }
 
 export default function ServiceStory({slug, title, trigger, onClose}) {
-  const stages = stories[slug];
+  const {t} = useLang();
+  const stages = stories[slug].map((stage, index) => (t.story.steps ? [...t.story.steps[slug][index], stage[2]] : stage));
   const last = stages.length - 1;
   const rootRef = useRef(null);
   const scrollRef = useRef(null);
@@ -844,17 +846,17 @@ export default function ServiceStory({slug, title, trigger, onClose}) {
             <div className="story-sticky">
               <header className="story-header">
                 <div>
-                  <p className="eyebrow">SERVICE STORY</p>
+                  <p className="eyebrow">{t.story.eyebrow}</p>
                   <h2 id="story-title">{title}</h2>
                 </div>
-                <nav className="story-stages" aria-label="Story stages">
+                <nav className="story-stages" aria-label={t.story.stages}>
                   {stages.map(([name], index) => (
                     <button key={name} type="button" className={index === active ? 'is-active' : undefined} aria-current={index === active ? 'step' : undefined} onClick={() => goTo(index)}>
                       <span>{String(index + 1).padStart(2, '0')}</span>{name}
                     </button>
                   ))}
                 </nav>
-                <button className="story-close eyebrow" type="button" ref={closeRef} onClick={close}>CLOSE <span aria-hidden="true">×</span></button>
+                <button className="story-close eyebrow" type="button" ref={closeRef} onClick={close}>{t.dialog.close} <span aria-hidden="true">×</span></button>
               </header>
               <div className="story-track" ref={trackRef} style={{width: `${stages.length * 100}%`}}>
                 {stages.map(([name, caption, Scene], index) => {
@@ -876,8 +878,8 @@ export default function ServiceStory({slug, title, trigger, onClose}) {
                   ? <svg viewBox="0 0 24 72"><path d="M12 2V68M2 56l10 12 10-12" /></svg>
                   : <svg viewBox="0 0 96 24"><path d="M2 12H92M80 2l12 10-12 10" /></svg>}
                 <span className="eyebrow">{touchScreen
-                  ? (atLast ? (ending ? 'RETURN' : 'SWIPE TO RETURN') : 'SWIPE')
-                  : (atLast ? (ending ? 'RETURN' : 'SCROLL TO RETURN') : 'SCROLL')}</span>
+                  ? (atLast ? (ending ? t.story.back : t.story.swipeBack) : t.story.swipe)
+                  : (atLast ? (ending ? t.story.back : t.story.scrollBack) : t.story.scroll)}</span>
               </div>
             </div>
           </div>

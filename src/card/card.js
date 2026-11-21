@@ -1,4 +1,18 @@
 import QRCode from 'qrcode';
+import {translatePage} from '../lang.js';
+
+translatePage({
+  en: {
+    title: 'Arda Kurucu — Digital card', meta: 'Digital card', tagline: 'moving images.', role: 'Visual Creative — videography, photography & design.',
+    options: 'Contact options', works: 'Selected works', start: 'Start a project', save: 'Save contact',
+    qrOpen: 'Tap to show QR code', qrTitle: 'Scan to open this card', qrLabel: 'QR code for this card', qrClose: 'Close ×',
+  },
+  tr: {
+    title: 'Arda Kurucu — Dijital kart', meta: 'Dijital kart', tagline: 'hareketli görüntüler.', role: 'Görsel Yaratıcı — video, fotoğraf ve tasarım.',
+    options: 'İletişim seçenekleri', works: 'Seçkiler', start: 'Proje başlat', save: 'Kişiyi kaydet',
+    qrOpen: 'QR kodu göstermek için dokun', qrTitle: 'Bu kartı açmak için tara', qrLabel: 'Bu kartın QR kodu', qrClose: 'Kapat ×',
+  },
+});
 
 
 const contact = {

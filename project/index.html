@@ -36,14 +36,14 @@
         <a href="/" class="logo-link" aria-label="Arda Kurucu — portfolio">
           <svg viewBox="300 290 610 433" class="logo" aria-hidden="true"><path fill="currentColor" d="M301 719L408 499L509 705V374H554V597L646 499H731L792 624L851 499H899L791 721L691 516L610 602L707 719H649L554 603V719H468L408 597L349 719Z" /><circle cx="869" cy="331" r="39" fill="#6e0000" /></svg>
         </a>
-        <a href="/" class="mono back"><svg class="ar" viewBox="0 0 24 24"><path d="M21 12H3M10 5l-7 7 7 7" /></svg> Portfolio</a>
+        <span class="bar-right"><span class="mono lang-switch" data-lang-switch></span><a href="/" class="mono back"><svg class="ar" viewBox="0 0 24 24"><path d="M21 12H3M10 5l-7 7 7 7" /></svg> <span data-t="back">Portfolio</span></a></span>
       </header>
 
       <main class="content">
         <section class="intro" id="intro">
-          <p class="mono meta">Start a project</p>
-          <h1>Have an <em>idea?</em><br />Let’s make it <em>visual.</em></h1>
-          <p class="lead">Tell me the idea, the format, your location and when you’d like to make it. A starting point—or just the feeling you want the work to leave behind—is enough.</p>
+          <p class="mono meta" data-t="meta">Start a project</p>
+          <h1 data-t-html="heading">Have an <em>idea?</em><br />Let’s make it <em>visual.</em></h1>
+          <p class="lead" data-t="lead">Tell me the idea, the format, your location and when you’d like to make it. A starting point—or just the feeling you want the work to leave behind—is enough.</p>
         </section>
 
         <!-- Netlify Forms picks this form up from the built HTML. The hidden field is a spam trap. -->
@@ -52,50 +52,50 @@
           <p class="trap" aria-hidden="true"><label>Leave this empty <input name="company" tabindex="-1" autocomplete="off" /></label></p>
 
           <div class="field">
-            <label for="name">Name</label>
+            <label for="name" data-t="name">Name</label>
             <input id="name" name="name" autocomplete="name" required />
           </div>
           <div class="field">
-            <label for="email">Email</label>
+            <label for="email" data-t="email">Email</label>
             <input id="email" name="email" type="email" autocomplete="email" inputmode="email" required />
           </div>
 
           <fieldset class="field">
-            <legend>Project type</legend>
+            <legend data-t="type">Project type</legend>
             <div class="chips">
-              <label><input type="radio" name="type" value="Videography" required /><span>Videography</span></label>
-              <label><input type="radio" name="type" value="Photography" /><span>Photography</span></label>
-              <label><input type="radio" name="type" value="Illustration Design" /><span>Illustration Design</span></label>
-              <label><input type="radio" name="type" value="Something else" /><span>Something else</span></label>
+              <label><input type="radio" name="type" value="Videography" required /><span data-t="videography">Videography</span></label>
+              <label><input type="radio" name="type" value="Photography" /><span data-t="photography">Photography</span></label>
+              <label><input type="radio" name="type" value="Illustration Design" /><span data-t="illustration">Illustration Design</span></label>
+              <label><input type="radio" name="type" value="Something else" /><span data-t="other">Something else</span></label>
             </div>
           </fieldset>
 
           <div class="pair">
             <div class="field">
-              <label for="date">When <small>approximate</small></label>
-              <input id="date" name="date" placeholder="e.g. March 2027" />
+              <label for="date" data-t-html="when">When <small>approximate</small></label>
+              <input id="date" name="date" placeholder="e.g. March 2027" data-t-placeholder="whenHint" />
             </div>
             <div class="field">
-              <label for="location">Location</label>
-              <input id="location" name="location" autocomplete="address-level2" placeholder="e.g. Istanbul" />
+              <label for="location" data-t="location">Location</label>
+              <input id="location" name="location" autocomplete="address-level2" placeholder="e.g. Istanbul" data-t-placeholder="locationHint" />
             </div>
           </div>
 
           <div class="field">
-            <label for="message">The idea</label>
-            <textarea id="message" name="message" rows="5" required placeholder="What would you like to make? Format, mood, references…"></textarea>
+            <label for="message" data-t="idea">The idea</label>
+            <textarea id="message" name="message" rows="5" required placeholder="What would you like to make? Format, mood, references…" data-t-placeholder="ideaHint"></textarea>
           </div>
 
           <p class="error" id="form-error" role="alert" hidden></p>
-          <button type="submit" class="send" id="send">Send <svg class="ar" viewBox="0 0 24 24"><path d="M3 12h18M14 5l7 7-7 7" /></svg></button>
-          <p class="mono note">Or email <a href="mailto:ardakurucu8@gmail.com">ardakurucu8@gmail.com</a></p>
+          <button type="submit" class="send" id="send"><span data-t="send">Send</span> <svg class="ar" viewBox="0 0 24 24"><path d="M3 12h18M14 5l7 7-7 7" /></svg></button>
+          <p class="mono note"><span data-t="or">Or email</span> <a href="mailto:ardakurucu8@gmail.com">ardakurucu8@gmail.com</a></p>
         </form>
 
         <section class="thanks" id="thanks" tabindex="-1" hidden>
-          <p class="mono meta">Message sent</p>
-          <h2>Thank <em>you.</em></h2>
-          <p class="lead">Your message is on its way. I’ll get back to you by email as soon as I can.</p>
-          <a href="/" class="send">Back to the portfolio <svg class="ar" viewBox="0 0 24 24"><path d="M6 18 18 6M8 6h10v10" /></svg></a>
+          <p class="mono meta" data-t="sentMeta">Message sent</p>
+          <h2 data-t-html="thanks">Thank <em>you.</em></h2>
+          <p class="lead" data-t="thanksLead">Your message is on its way. I’ll get back to you by email as soon as I can.</p>
+          <a href="/" class="send"><span data-t="backFull">Back to the portfolio</span> <svg class="ar" viewBox="0 0 24 24"><path d="M6 18 18 6M8 6h10v10" /></svg></a>
         </section>
       </main>
     </div>

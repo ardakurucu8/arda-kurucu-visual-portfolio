@@ -2,6 +2,33 @@
 // which emails it to Arda; on Netlify (while it is still live) Netlify Forms takes it.
 // Paste the Web3Forms access key (public by design, it only allows sending to Arda) here:
 const WEB3FORMS_KEY = 'dd0de98e-2962-415b-9ee9-035a22033b31';
+import {translatePage} from '../lang.js';
+
+let lang = 'en';
+const words = translatePage({
+  en: {
+    title: 'Start a project — Arda Kurucu', back: 'Portfolio', meta: 'Start a project',
+    heading: 'Have an <em>idea?</em><br />Let’s make it <em>visual.</em>',
+    lead: 'Tell me the idea, the format, your location and when you’d like to make it. A starting point—or just the feeling you want the work to leave behind—is enough.',
+    name: 'Name', email: 'Email', type: 'Project type', videography: 'Videography', photography: 'Photography', illustration: 'Illustration Design', other: 'Something else',
+    when: 'When <small>approximate</small>', whenHint: 'e.g. March 2027', location: 'Location', locationHint: 'e.g. Istanbul',
+    idea: 'The idea', ideaHint: 'What would you like to make? Format, mood, references…', send: 'Send', sending: 'Sending…', or: 'Or email',
+    missing: 'Please fill in your name, a valid email, the project type and the idea.',
+    failed: 'Your message couldn’t be sent just now. Please try again, or email <a href="mailto:ardakurucu8@gmail.com">ardakurucu8@gmail.com</a>.',
+    sentMeta: 'Message sent', thanks: 'Thank <em>you.</em>', thanksLead: 'Your message is on its way. I’ll get back to you by email as soon as I can.', backFull: 'Back to the portfolio',
+  },
+  tr: {
+    title: 'Proje başlat — Arda Kurucu', back: 'Portfolyo', meta: 'Proje başlat',
+    heading: 'Bir <em>fikrin</em> mi var?<br />Hadi <em>görsele</em> dökelim.',
+    lead: 'Fikrini, formatı, konumunu ve ne zaman çekmek istediğini anlat. Bir başlangıç noktası—ya da sadece işin bırakmasını istediğin his—yeterli.',
+    name: 'Ad soyad', email: 'E-posta', type: 'Proje türü', videography: 'Videografi', photography: 'Fotoğraf', illustration: 'İllüstrasyon Tasarım', other: 'Başka bir şey',
+    when: 'Ne zaman <small>yaklaşık</small>', whenHint: 'ör. Mart 2027', location: 'Konum', locationHint: 'ör. İstanbul',
+    idea: 'Fikir', ideaHint: 'Ne yapmak istiyorsun? Format, atmosfer, referanslar…', send: 'Gönder', sending: 'Gönderiliyor…', or: 'Ya da e-posta at',
+    missing: 'Lütfen adını, geçerli bir e-posta adresini, proje türünü ve fikrini yaz.',
+    failed: 'Mesajın şu an gönderilemedi. Lütfen tekrar dene ya da <a href="mailto:ardakurucu8@gmail.com">ardakurucu8@gmail.com</a> adresine yaz.',
+    sentMeta: 'Mesaj gönderildi', thanks: '<em>Teşekkürler.</em>', thanksLead: 'Mesajın yola çıktı. En kısa sürede e-postayla dönüş yapacağım.', backFull: 'Portfolyoya dön',
+  },
+}, (current) => { lang = current; });
 const form = document.getElementById('project-form');
 const intro = document.getElementById('intro');
 const thanks = document.getElementById('thanks');
@@ -49,13 +76,13 @@ form.addEventListener('submit', async (event) => {
   error.hidden = true;
   const invalid = validate();
   if (invalid) {
-    error.textContent = 'Please fill in your name, a valid email, the project type and the idea.';
+    error.textContent = words().missing;
     error.hidden = false;
     invalid.focus();
     return;
   }
   send.disabled = true;
-  send.firstChild.textContent = 'Sending… ';
+  send.firstChild.textContent = words().sending;
   try {
     const data = new FormData(form);
     if (data.get('company')) { showThanks(); return; } // spam trap filled in: pretend success, send nothing
@@ -73,6 +100,7 @@ form.addEventListener('submit', async (event) => {
           from_name: 'ardakurucu.com',
           replyto: fields.email,
           ...fields,
+          language: lang === 'tr' ? 'Turkish' : 'English',
         }),
       });
       const result = await response.json().catch(() => ({}));
@@ -83,10 +111,10 @@ form.addEventListener('submit', async (event) => {
     }
     showThanks();
   } catch {
-    error.innerHTML = 'Your message couldn’t be sent just now. Please try again, or email <a href="mailto:ardakurucu8@gmail.com">ardakurucu8@gmail.com</a>.';
+    error.innerHTML = words().failed;
     error.hidden = false;
   } finally {
     send.disabled = false;
-    send.firstChild.textContent = 'Send ';
+    send.firstChild.textContent = words().send;
   }
 });

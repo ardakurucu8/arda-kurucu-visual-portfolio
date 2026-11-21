@@ -41,31 +41,31 @@
         <a href="/" class="logo-link" aria-label="Arda Kurucu — portfolio">
           <svg viewBox="300 290 610 433" class="logo" aria-hidden="true"><path fill="currentColor" d="M301 719L408 499L509 705V374H554V597L646 499H731L792 624L851 499H899L791 721L691 516L610 602L707 719H649L554 603V719H468L408 597L349 719Z" /><circle cx="869" cy="331" r="39" fill="#6e0000" /></svg>
         </a>
-        <span class="mono rec"><i></i>Showreel</span>
+        <span class="bar-right"><span class="mono lang-switch" data-lang-switch></span><span class="mono rec"><i></i>Showreel</span></span>
       </header>
 
       <main class="content">
-        <p class="mono meta">Digital card</p>
-        <h1>Arda Kurucu<em>moving images.</em></h1>
-        <p class="role">Visual Creative — videography, photography &amp; design.</p>
+        <p class="mono meta" data-t="meta">Digital card</p>
+        <h1>Arda Kurucu<em data-t="tagline">moving images.</em></h1>
+        <p class="role" data-t="role">Visual Creative — videography, photography &amp; design.</p>
 
-        <nav class="rows" aria-label="Contact options">
-          <a href="/#work"><b><span class="mono">01</span>Selected works</b><svg class="ar" viewBox="0 0 24 24"><path d="M6 18 18 6M8 6h10v10" /></svg></a>
-          <a href="/project/"><b><span class="mono">02</span>Start a project</b><svg class="ar" viewBox="0 0 24 24"><path d="M6 18 18 6M8 6h10v10" /></svg></a>
+        <nav class="rows" aria-label="Contact options" data-t-aria="options">
+          <a href="/#work"><b><span class="mono">01</span><span data-t="works">Selected works</span></b><svg class="ar" viewBox="0 0 24 24"><path d="M6 18 18 6M8 6h10v10" /></svg></a>
+          <a href="/project/"><b><span class="mono">02</span><span data-t="start">Start a project</span></b><svg class="ar" viewBox="0 0 24 24"><path d="M6 18 18 6M8 6h10v10" /></svg></a>
           <a href="https://wa.me/905321710401" target="_blank" rel="noreferrer"><b><span class="mono">03</span>WhatsApp</b><svg class="ar" viewBox="0 0 24 24"><path d="M6 18 18 6M8 6h10v10" /></svg></a>
           <a href="https://www.instagram.com/kurucuvisuals/" target="_blank" rel="noreferrer"><b><span class="mono">04</span>Instagram</b><svg class="ar" viewBox="0 0 24 24"><path d="M6 18 18 6M8 6h10v10" /></svg></a>
         </nav>
 
-        <button type="button" class="save" id="save">Save contact <svg class="ar" viewBox="0 0 24 24"><path d="M12 4v14M6 12l6 6 6-6" /></svg></button>
-        <button type="button" class="qr-toggle mono" id="qr-open">Tap to show QR code</button>
+        <button type="button" class="save" id="save"><span data-t="save">Save contact</span> <svg class="ar" viewBox="0 0 24 24"><path d="M12 4v14M6 12l6 6 6-6" /></svg></button>
+        <button type="button" class="qr-toggle mono" id="qr-open" data-t="qrOpen">Tap to show QR code</button>
       </main>
 
       <div class="qr" id="qr" role="dialog" aria-modal="true" aria-labelledby="qr-title" hidden>
         <div class="qr-box">
-          <p class="mono" id="qr-title">Scan to open this card</p>
-          <canvas id="qr-canvas" aria-label="QR code for this card"></canvas>
+          <p class="mono" id="qr-title" data-t="qrTitle">Scan to open this card</p>
+          <canvas id="qr-canvas" aria-label="QR code for this card" data-t-aria="qrLabel"></canvas>
           <p class="qr-name">Arda Kurucu</p>
-          <button type="button" class="mono qr-close" id="qr-close">Close ×</button>
+          <button type="button" class="mono qr-close" id="qr-close" data-t="qrClose">Close ×</button>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {thumb} from './media.js';
 import Title from './Title.jsx';
+import {useLang} from './i18n.js';
 import {Canvas, useFrame, useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -304,6 +305,7 @@ function initialQuality(mobile) {
 }
 
 export default function WorkJourney({items, onOpen, mobile = false}) {
+  const {t, lang} = useLang();
   const size = mobile ? MOBILE_SIZE : {maxW: MAX_W, maxH: MAX_H, gap: GAP};
   const fov = mobile ? MOBILE_FOV : FOV;
   const sectionRef = useRef(null);
@@ -380,7 +382,7 @@ export default function WorkJourney({items, onOpen, mobile = false}) {
         </div>
         <div className="journey-vignette" aria-hidden="true" />
         <div className="journey-chrome eyebrow" aria-hidden="true">
-          <span>SCROLL TO TRAVEL</span>
+          <span>{t.work.travel}</span>
           <QualityBadge quality={quality} />
           <span>{String(activeIndex + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}</span>
         </div>
@@ -393,21 +395,21 @@ export default function WorkJourney({items, onOpen, mobile = false}) {
               ref={(node) => { cardsRef.current[index] = node; }}
               type="button"
               onClick={() => onOpen(project)}
-              aria-label={`View ${project.title}. ${project.role}`}
+              aria-label={t.work.viewLabel(project.title, project.role)}
             >
               <span className="journey-card-frame">
                 <span className="band band-fill"><img src={thumb(project.cover)} alt="" loading="eager" decoding="async" draggable="false" /></span>
-                <span className="journey-card-number eyebrow">NO. {String(index + 1).padStart(2, '0')}</span>
-                <span className="journey-card-action eyebrow">OPEN PROJECT ↗</span>
+                <span className="journey-card-number eyebrow">{lang === 'tr' ? 'NO' : 'NO.'} {String(index + 1).padStart(2, '0')}</span>
+                <span className="journey-card-action eyebrow">{t.work.view} ↗</span>
               </span>
             </button>
           ))}
         </div>
         <div className={`journey-caption ${activeIndex % 2 === 0 ? 'caption-left' : 'caption-right'}`} aria-live="polite">
-          <p className="eyebrow">{active?.type} / {active?.genre}</p>
+          <p className="eyebrow">{active?.typeLabel} / {active?.genre}</p>
           <h3><Title project={active} /></h3>
           <p>{active?.role}</p>
-          <button type="button" onClick={() => onOpen(active)}>VIEW PROJECT <span aria-hidden="true">↗</span></button>
+          <button type="button" onClick={() => onOpen(active)}>{t.work.view} <span aria-hidden="true">↗</span></button>
         </div>
         <div className="journey-progress" aria-hidden="true"><i style={{transform: `scaleX(${(activeIndex + 1) / Math.max(items.length, 1)})`}} /></div>
       </div>
