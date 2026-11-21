@@ -1,6 +1,7 @@
-// Project inquiry form. Netlify Forms stores each submission and emails it to Arda
-// (Netlify → Forms → Form notifications). The form posts in the background and shows
-// a thank-you panel; without JavaScript it still posts and returns to /project/?sent=1.
+// Project inquiry form. On GitHub Pages / ardakurucu.com the message goes to Web3Forms,
+// which emails it to Arda; on Netlify (while it is still live) Netlify Forms takes it.
+// Paste the Web3Forms access key (public by design, it only allows sending to Arda) here:
+const WEB3FORMS_KEY = 'dd0de98e-2962-415b-9ee9-035a22033b31';
 const form = document.getElementById('project-form');
 const intro = document.getElementById('intro');
 const thanks = document.getElementById('thanks');
@@ -56,9 +57,30 @@ form.addEventListener('submit', async (event) => {
   send.disabled = true;
   send.firstChild.textContent = 'Sending… ';
   try {
-    const body = new URLSearchParams(new FormData(form)).toString();
-    const response = await fetch('/', {method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body});
-    if (!response.ok) throw new Error(String(response.status));
+    const data = new FormData(form);
+    if (data.get('company')) { showThanks(); return; } // spam trap filled in: pretend success, send nothing
+    let response;
+    if (WEB3FORMS_KEY) {
+      const fields = Object.fromEntries(data);
+      delete fields['form-name'];
+      delete fields.company;
+      response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', Accept: 'application/json'},
+        body: JSON.stringify({
+          access_key: WEB3FORMS_KEY,
+          subject: `New project inquiry — ${fields.type || 'Website'} — ${fields.name}`,
+          from_name: 'ardakurucu.com',
+          replyto: fields.email,
+          ...fields,
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.success === false) throw new Error(result.message || String(response.status));
+    } else {
+      response = await fetch('/', {method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams(data).toString()});
+      if (!response.ok) throw new Error(String(response.status));
+    }
     showThanks();
   } catch {
     error.innerHTML = 'Your message couldn’t be sent just now. Please try again, or email <a href="mailto:ardakurucu8@gmail.com">ardakurucu8@gmail.com</a>.';

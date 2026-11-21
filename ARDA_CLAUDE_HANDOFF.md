@@ -26,6 +26,7 @@ MEVCUT TASARIM KARARLARI
 - Erişilebilirlik önemlidir: Work görselleri HTML button, sadece aktif kart klavye odağı alır, dialog Escape ile kapanır, reduced-motion alternatifi vardır.
 - Dijital kartvizit ayrı bir sayfadır: `card/index.html` → `/card/` (kod `src/card/`). Ana akışta yoktur; İletişim bölümündeki DIGITAL CARD düğmesi ve footer linkiyle açılır. Arka planda Tanabay & Sasha ile vasiyet. trailer'ından kısa anlar döner; Save contact bir .vcf indirir, QR kod sayfanın kendi adresini gösterir. Telefon: +90 532 171 0401 (Arda'nın onayıyla).
 - Proje formu ayrı bir sayfadır: `project/index.html` → `/project/` (kod `src/project/`). Netlify Forms ile çalışır (form adı `project`, spam tuzağı alanı `company`); bildirim e-postası Netlify → Forms → Form notifications'tan ayarlanır. Bütün "Discuss a project" / "Start a project" düğmeleri buraya gider. `/project/?type=Photography` proje türünü önceden seçer.
+- Barındırma GitHub Pages'e taşınıyor: `.github/workflows/pages.yml` her push'ta derleyip yayınlar, `public/CNAME` = ardakurucu.com. Proje formu `src/project/project.js` içindeki `WEB3FORMS_KEY` doluysa Web3Forms'a, boşsa Netlify Forms'a gönderir.
 - Site şu anda `noindex, nofollow` kullanır. Kesin krediler ve yayın onayı olmadan kaldırma.
 
 İÇERİK VE MEDYA KURALLARI

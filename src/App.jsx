@@ -229,7 +229,6 @@ function ProjectDialog({project, index, onClose, onNavigate}) {
           </dl>
           <div className="dialog-copy">
             <p>{project.summary}</p>
-            <p className="replacement-note">RELEASE NOTE — {project.context}</p>
           </div>
         </div>
         {project.gallery?.length > (clips.length ? 0 : 1) && <JustifiedGallery images={project.gallery} title={project.title} alt={project.alt} large={project.galleryLarge} />}
@@ -400,7 +399,7 @@ export default function App() {
               );
             })}
           </div>
-          <p className="content-disclaimer" data-reveal>RELEASE STATUS — Public portfolio use of the supplied media was confirmed on 02 November 2026. Titles inferred from folder names and resume-verified roles are shown where available. Exact project roles, years and final credit wording still require confirmation. AI-generated work is kept separate from Photography and explicitly disclosed.</p>
+          <p className="content-disclaimer" data-reveal>RELEASE STATUS — Public portfolio use of the supplied media was confirmed on 02 November 2026. AI-generated work is kept separate from Photography and explicitly disclosed.</p>
         </section>
 
         <section id="approach" className="section approach" aria-labelledby="approach-title">
