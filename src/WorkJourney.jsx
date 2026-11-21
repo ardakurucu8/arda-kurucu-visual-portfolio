@@ -1,4 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
+import {thumb} from './media.js';
+import Title from './Title.jsx';
 import {Canvas, useFrame, useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -394,7 +396,7 @@ export default function WorkJourney({items, onOpen, mobile = false}) {
               aria-label={`View ${project.title}. ${project.role}`}
             >
               <span className="journey-card-frame">
-                <img src={project.cover} alt="" loading="eager" decoding="async" draggable="false" />
+                <img src={thumb(project.cover)} alt="" loading="eager" decoding="async" draggable="false" />
                 <span className="journey-card-number eyebrow">NO. {String(index + 1).padStart(2, '0')}</span>
                 <span className="journey-card-action eyebrow">OPEN PROJECT ↗</span>
               </span>
@@ -403,7 +405,7 @@ export default function WorkJourney({items, onOpen, mobile = false}) {
         </div>
         <div className={`journey-caption ${activeIndex % 2 === 0 ? 'caption-left' : 'caption-right'}`} aria-live="polite">
           <p className="eyebrow">{active?.type} / {active?.genre}</p>
-          <h3>{active?.title}</h3>
+          <h3><Title project={active} /></h3>
           <p>{active?.role}</p>
           <button type="button" onClick={() => onOpen(active)}>VIEW PROJECT <span aria-hidden="true">↗</span></button>
         </div>

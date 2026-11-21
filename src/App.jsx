@@ -3,6 +3,8 @@ import gsap from 'gsap';
 import {ScrollTrigger} from 'gsap/ScrollTrigger';
 import {projects} from './data/projects.js';
 import {layoutGallery} from './galleryLayout.js';
+import {thumb} from './media.js';
+import Title from './Title.jsx';
 import {createPortal} from 'react-dom';
 import {LOGO_DOT, LOGO_PATH, LOGO_VIEWBOX} from './brand.js';
 
@@ -44,7 +46,9 @@ function LoadingCurtain() {
 
   useEffect(() => {
     let cancelled = false;
-    const critical = ['/media/portfolio/hero-portrait.jpg', ...projects.slice(0, 3).map((project) => project.cover)];
+    // Phones only wait for the hero photo; larger screens also warm the first cover.
+    const phone = window.matchMedia('(max-width: 760px)').matches;
+    const critical = [thumb('/media/portfolio/hero-portrait.jpg'), ...(phone ? [] : [thumb(projects[0].cover)])];
     const timer = window.setTimeout(() => !cancelled && setState((current) => ({...current, visible: true})), 120);
     let loaded = 0;
     const load = (src) => new Promise((resolve) => {
@@ -60,7 +64,7 @@ function LoadingCurtain() {
     });
     Promise.race([
       Promise.all(critical.map(load)),
-      new Promise((resolve) => window.setTimeout(resolve, 1800)),
+      new Promise((resolve) => window.setTimeout(resolve, 1200)),
     ]).then(() => {
       window.clearTimeout(timer);
       if (!cancelled) setState((current) => ({...current, progress: 100, done: true}));
@@ -148,7 +152,7 @@ function JustifiedGallery({images, title, alt, large}) {
           return (
             <button key={item.src} type="button" className="gallery-item" aria-label={`Open photo ${position + 1} of ${order.length}`}
               style={{transform: `translate(${item.x}px, ${item.y}px)`, width: `${item.w}px`, height: `${item.h}px`}} onClick={() => setOpen(position)}>
-              <img src={item.src} loading={item.y > 900 ? 'lazy' : 'eager'} decoding="async"
+              <img src={thumb(item.src)} loading={item.y > 900 ? 'lazy' : 'eager'} decoding="async"
                 alt={position === 0 ? alt : `${title} selected image ${position + 1}`} />
             </button>
           );
@@ -202,8 +206,8 @@ function ProjectDialog({project, index, onClose, onNavigate}) {
         </header>
         <div className={`dialog-visual${clip ? ' has-video' : ''}`}>
           {clip
-            ? <video key={clip.src} src={clip.src} poster={clipIndex === 0 ? project.cover : clip.poster} controls playsInline preload="metadata" aria-label={`${project.title} — ${clip.title}`} />
-            : <img src={project.cover} alt={project.alt} />}
+            ? <video key={clip.src} src={clip.src} poster={clipIndex === 0 ? thumb(project.cover) : clip.poster} controls playsInline preload="metadata" aria-label={`${project.title} — ${clip.title}`} />
+            : <img src={thumb(project.cover)} alt={project.alt} />}
           <span className="media-flag">{project.label}</span>
         </div>
         {clips.length > 1 && <div className="dialog-clips" role="group" aria-label={`${project.title} videos`}>
@@ -211,7 +215,7 @@ function ProjectDialog({project, index, onClose, onNavigate}) {
           <div>
             {clips.map((item, itemIndex) => (
               <button key={item.src} type="button" aria-pressed={itemIndex === clipIndex} onClick={() => setClipIndex(itemIndex)}>
-                <img src={itemIndex === 0 ? project.cover : item.poster} alt="" loading="lazy" />
+                <img src={itemIndex === 0 ? thumb(project.cover) : item.poster} alt="" loading="lazy" />
                 <span><small>{String(itemIndex + 1).padStart(2, '0')}</small>{item.title}</span>
               </button>
             ))}
@@ -220,7 +224,7 @@ function ProjectDialog({project, index, onClose, onNavigate}) {
         <div className="dialog-body">
           <div className="dialog-title-block">
             <p className="eyebrow">{project.type} / {project.genre}</p>
-            <h2 id="project-title">{project.title}</h2>
+            <h2 id="project-title"><Title project={project} /></h2>
           </div>
           <dl className="project-facts">
             <div><dt>Role</dt><dd>{project.role}</dd></div>
@@ -295,6 +299,15 @@ export default function App() {
   const [filter, setFilter] = useState('All');
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  // The 3D Work valley (three.js) only loads once the visitor nears the Work section.
+  const workSentinel = useRef(null);
+  const [nearWork, setNearWork] = useState(() => window.location.hash === '#work');
+  useEffect(() => {
+    if (nearWork || !workSentinel.current) return undefined;
+    const observer = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) setNearWork(true); }, {rootMargin: '300px 0px'});
+    observer.observe(workSentinel.current);
+    return () => observer.disconnect();
+  }, [nearWork]);
   const [useWebgl, setUseWebgl] = useState(false);
   const [mobileJourney, setMobileJourney] = useState(false);
   const appRef = useRef(null);
@@ -362,7 +375,7 @@ export default function App() {
               </div>
             </div>
             <figure className="hero-frame" data-intro>
-              <img src="/media/portfolio/hero-portrait.jpg" alt="Editorial portrait of a woman reading at a softly lit restaurant table" fetchPriority="high" />
+              <img src={thumb('/media/portfolio/hero-portrait.jpg')} alt="Editorial portrait of a woman reading at a softly lit restaurant table" fetchPriority="high" />
               <figcaption><span>ARDA KURUCU / SELECTED PORTRAIT</span><span>PUBLIC PORTFOLIO / 2026</span></figcaption>
             </figure>
           </div>
@@ -380,19 +393,20 @@ export default function App() {
               {filters.map((item) => <button key={item} type="button" aria-pressed={filter === item} onClick={() => setFilter(item)}>{item}</button>)}
             </div>
           </div>
-          {(useWebgl || mobileJourney) && <Suspense fallback={<div className="journey-loading eyebrow">PREPARING VISUAL JOURNEY…</div>}><WorkJourney key={useWebgl ? 'desktop' : 'mobile'} items={visible} onOpen={openProject} mobile={!useWebgl} /></Suspense>}
+          <span ref={workSentinel} aria-hidden="true" />
+          {(useWebgl || mobileJourney) && nearWork && <Suspense fallback={<div className="journey-loading eyebrow">PREPARING VISUAL JOURNEY…</div>}><WorkJourney key={useWebgl ? 'desktop' : 'mobile'} items={visible} onOpen={openProject} mobile={!useWebgl} /></Suspense>}
           <div className={`project-grid ${useWebgl || mobileJourney ? 'project-grid-fallback' : ''}${mobileJourney ? ' project-grid-hidden' : ''}`}>
             {visible.map((project, visibleIndex) => {
               const projectIndex = projects.indexOf(project);
               return (
                 <button className="project-card" data-reveal key={project.slug} type="button" onClick={() => setSelectedIndex(projectIndex)} aria-label={`View ${project.title}. ${project.role}`}>
                   <span className="project-image" style={{aspectRatio: project.aspect}}>
-                    <img src={project.cover} loading={visibleIndex > 1 ? 'lazy' : 'eager'} alt={project.alt} />
+                    <img src={thumb(project.cover)} loading={visibleIndex > 1 ? 'lazy' : 'eager'} decoding="async" alt={project.alt} />
                     <span className="media-flag">{project.label}</span>
                     <span className="view-project">VIEW PROJECT <Arrow /></span>
                   </span>
                   <span className="project-meta">
-                    <span><strong>{project.title}</strong><small>{project.genre} / {project.role}</small></span>
+                    <span><strong><Title project={project} /></strong><small>{project.genre} / {project.role}</small></span>
                     <span className="project-count">{String(projectIndex + 1).padStart(2, '0')}</span>
                   </span>
                 </button>

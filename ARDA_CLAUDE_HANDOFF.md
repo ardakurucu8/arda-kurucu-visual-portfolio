@@ -35,6 +35,7 @@ MEVCUT TASARIM KARARLARI
 - Proje verileri `src/data/projects.js` içindedir. Varsayarak yeni müşteri, yıl, rol, işbirlikçi veya kredi yazma. Eksik bilgiye “confirmation pending” yaklaşımıyla davran ve Arda'ya açık soru sor.
 - Genel metinler ve iletişim `src/App.jsx` içindedir.
 - Yeni medya eklenirse web türevi optimize edilmeli; ham master dosya depoya konmamalı.
+- Hız için: yazı tipleri `public/fonts` içinde (dış sunucu yok). Kartlar, vadi ve albümler fotoğrafların 1200 px kopyalarını (`public/media/portfolio/thumbs/`) kullanır; yeni fotoğraf eklenince macOS'ta `sh scripts/make-thumbs.sh` çalıştırılır. 3D vadi kodu Work bölümüne yaklaşınca yüklenir.
 - Proje galerileri VSCO profili gibi sütunlu, organik bir düzendedir (`src/galleryLayout.js`): fotoğraflar asla kırpılmaz, kendi oranlarında kalır; her albümdeki en net ~%40 iki sütun genişliğinde, yumuşak video kareleri tek sütun. Fotoğrafa basınca tam ekran açılır. Netlik puanları `src/data/mediaSharpness.json` içinde; yeni fotoğraf eklenince macOS'ta `swift scripts/media-sharpness.swift` çalıştırılır.
 
 DEĞİŞİKLİK YÖNTEMİ

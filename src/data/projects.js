@@ -8,6 +8,8 @@ const range = (prefix, count) => Array.from({length: count}, (_, index) => media
 export const projects = [
   {
     slug: 'society-istikbal',
+    // Only the Turkish word takes Turkish capitals (İSTİKBAL); "Society" stays English.
+    titleParts: [['İstikbal', 'tr'], [' × Society', 'en']],
     title: 'İstikbal × Society',
     type: 'Video',
     genre: 'Commercial / Behind the Scenes',
@@ -62,6 +64,7 @@ export const projects = [
   },
   {
     slug: 'vasiyet',
+    lang: 'tr', // Turkish title: capitals must use İ, not I (İSTİKBAL, VASİYET)
     title: 'vasiyet.',
     type: 'Video',
     genre: 'Short Film',
@@ -82,6 +85,7 @@ export const projects = [
   },
   {
     slug: 'calkala',
+    lang: 'tr', // Turkish title: capitals must use İ, not I (İSTİKBAL, VASİYET)
     title: 'Çalkala',
     type: 'Video',
     genre: 'Music / Studio Session',
